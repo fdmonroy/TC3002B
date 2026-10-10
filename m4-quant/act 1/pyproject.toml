@@ -1,0 +1,29 @@
+[project]
+name = "act-1"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Daniel Monroy", email = "fernandodms04@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fitter>=1.8.1",
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+
+[project.scripts]
+act-1 = "act_1:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
