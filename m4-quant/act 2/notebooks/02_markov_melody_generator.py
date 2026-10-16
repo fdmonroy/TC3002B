@@ -52,19 +52,25 @@ from IPython.display import Audio, display
 # Habilitar soporte de tablas en LaTeX para exportación a PDF igualando fuente del documento
 def _gt_to_latex(self):
     latex_str = self.as_latex()
-    latex_str = re.sub(r"\\begin\{table\}(\[[^\]]*\])?", r"\\begin{table}[H]\n\\centering", latex_str)
-    col_match = re.search(r"\\begin\{tabular\*\}\{[^}]+\}\{(@\{\\extracolsep\{\\fill\}\}[a-z]+)\}", latex_str)
-    num_cols = len(col_match.group(1).replace("@{\\extracolsep{\\fill}}", "")) if col_match else 4
-    if num_cols >= 7:
-        latex_str = latex_str.replace(r"\begin{tabular*}{\linewidth}", r"\begin{tabular*}{\linewidth}")
-        latex_str = re.sub(r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont", r"\\small", latex_str)
-    elif num_cols >= 5:
-        latex_str = latex_str.replace(r"\begin{tabular*}{\linewidth}", r"\begin{tabular*}{\linewidth}")
-        latex_str = re.sub(r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont", r"\\normalsize", latex_str)
-    else:
-        latex_str = latex_str.replace(r"\begin{tabular*}{\linewidth}", r"\begin{tabular*}{0.85\linewidth}")
-        latex_str = re.sub(r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont", r"\\normalsize", latex_str)
-    latex_str = re.sub(r"\\caption\*\{\s*\{\\large\s+([^\}]+)\}\s*\}", r"\\caption*{\\textbf{\\normalsize \1}}", latex_str)
+    latex_str = re.sub(
+        r"\\begin\{table\}(\[[^\]]*\])?",
+        r"\\begin{table}[H]\n\\centering",
+        latex_str
+    )
+    latex_str = latex_str.replace(
+        r"\begin{tabular*}{\linewidth}",
+        r"\begin{tabular*}{0.75\linewidth}"
+    )
+    latex_str = re.sub(
+        r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont",
+        r"\\normalsize",
+        latex_str
+    )
+    latex_str = re.sub(
+        r"\\caption\*\{\s*\{\\large\s+([^\}]+)\}\s*\}",
+        r"\\caption*{\\textbf{\\normalsize \1}}",
+        latex_str
+    )
     return latex_str
 
 GT._repr_latex_ = _gt_to_latex
@@ -100,15 +106,15 @@ overview_data = pd.DataFrame([
     {"Parámetro": "Tonalidad base", "Valor": "Re Mayor (D Major)"},
     {"Parámetro": "Estados melódicos", "Valor": "7 notas (D4 a C#5)"},
     {"Parámetro": "Estados armónicos", "Valor": "4 acordes (D, G, A, Bm)"},
-    {"Parámetro": "Frecuencia de muestreo", "Valor": "44,100 Hz (Calidad CD)"},
-    {"Parámetro": "Afinación y temperamento", "Valor": "12 TET (A4 = 440 Hz)"},
-    {"Parámetro": "Articulación de onda", "Valor": "Senoidal con armónicos y ADSR"},
-    {"Parámetro": "Duraciones rítmicas", "Valor": "4 figuras variables (120 BPM)"},
+    {"Parámetro": "Frecuencia muestreo", "Valor": "44,100 Hz (Calidad CD)"},
+    {"Parámetro": "Afinación", "Valor": "12 TET (A4 = 440 Hz)"},
+    {"Parámetro": "Articulación", "Valor": "Senoidal con ADSR"},
+    {"Parámetro": "Duraciones", "Valor": "4 figuras (120 BPM)"},
 ])
 
 gt_overview = (
     GT(overview_data)
-    .tab_header(title="Resumen del Sistema Estocástico y Síntesis Acústica")
+    .tab_header(title="Resumen del Sistema y Síntesis Acústica")
     .cols_align(align="left", columns=["Parámetro"])
     .cols_align(align="right", columns=["Valor"])
 )
@@ -142,7 +148,7 @@ for n in D_MAJOR_NOTES_OCT4:
     ratio_to_tonic = freq_val / note_to_freq("D4")
     notes_data.append({
         "Nota": n,
-        "Grado armónico": {
+        "Grado": {
             "D4": "I (Tónica)",
             "E4": "ii (Supertónica)",
             "F#4": "iii (Mediante)",
@@ -158,9 +164,12 @@ for n in D_MAJOR_NOTES_OCT4:
 
 gt_notes = (
     GT(pd.DataFrame(notes_data))
-    .tab_header(title="Grados de la Escala Diatónica de Re Mayor (D Major)")
-    .cols_align(align="left", columns=["Nota", "Grado armónico"])
-    .cols_align(align="right", columns=["MIDI", "Frecuencia (Hz)", "Razón a Tónica"])
+    .tab_header(title="Grados de la Escala Diatónica de Re Mayor")
+    .cols_align(align="left", columns=["Nota", "Grado"])
+    .cols_align(
+        align="right",
+        columns=["MIDI", "Frecuencia (Hz)", "Razón a Tónica"]
+    )
 )
 gt_notes
 
@@ -197,7 +206,7 @@ df_matrix = chain_notes.to_dataframe()
 
 gt_matrix = (
     GT(df_matrix.reset_index().rename(columns={"index": "Estado (t)"}))
-    .tab_header(title="Matriz de Probabilidades de Transición P (Notas en Re Mayor)")
+    .tab_header(title="Matriz de Probabilidades de Transición P")
     .fmt_number(columns=D_MAJOR_NOTES_OCT4, decimals=2)
     .cols_align(align="left", columns=["Estado (t)"])
     .cols_align(align="right", columns=D_MAJOR_NOTES_OCT4)
@@ -210,9 +219,9 @@ row_sums = HARMONIC_TRANSITIONS_D_MAJOR.sum(axis=1)
 is_non_negative = bool(np.all(HARMONIC_TRANSITIONS_D_MAJOR >= 0.0))
 is_stochastic = bool(np.allclose(row_sums, 1.0, atol=1e-5))
 
-print(f"Propiedad 1: ¿Todas las probabilidades son >= 0? : {is_non_negative}")
-print(f"Propiedad 2: Suma por fila de la matriz:\n{row_sums}")
-print(f"¿Todas las filas suman exactamente 1.0 (np.allclose)? : {is_stochastic}")
+print(f"¿Probabilidades >= 0? : {is_non_negative}")
+print(f"Suma por fila de la matriz:\n{row_sums}")
+print(f"¿Filas suman 1.0 (allclose)? : {is_stochastic}")
 
 # %% [markdown]
 # *Nota sobre la matriz estocástica:* A diferencia de los modelos con distribución uniforme plana (~0.14) del prototipo web de Netlify, la matriz diseñada incorpora polaridad armónica. Cada fila representa la distribución condicional $P(X_{t+1} \mid X_t = s_i)$, sumando estrictamente 1.0.
@@ -270,9 +279,12 @@ df_stationary = pd.DataFrame([
 
 gt_stationary = (
     GT(df_stationary)
-    .tab_header(title="Distribución Estacionaria Asintótica de la Cadena de Notas")
+    .tab_header(title="Distribución Estacionaria Asintótica")
     .cols_align(align="left", columns=["Nota", "Grado"])
-    .cols_align(align="right", columns=["Probabilidad límite", "Porcentaje"])
+    .cols_align(
+        align="right",
+        columns=["Probabilidad límite", "Porcentaje"]
+    )
 )
 gt_stationary
 
@@ -337,10 +349,13 @@ df_melody_display = df_melody.rename(columns={
 
 gt_melody = (
     GT(df_melody_display)
-    .tab_header(title=f"Secuencia Generada: {N_TRANSICIONES} Transiciones Estocásticas")
+    .tab_header(title=f"Secuencia: {N_TRANSICIONES} Transiciones")
     .cols_align(align="center", columns=["Paso"])
     .cols_align(align="left", columns=["Estado ant.", "Nota"])
-    .cols_align(align="right", columns=["Frecuencia", "Duración", "Tiempo acum."])
+    .cols_align(
+        align="right",
+        columns=["Frecuencia", "Duración", "Tiempo acum."]
+    )
 )
 gt_melody
 
@@ -410,68 +425,15 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ## 3. Reflexión (40%)
+# ## 3. Reflexión
 #
-# Uno empieza programando estas cadenas pensando que la música va a sonar robótica o totalmente al azar, como el prototipo plano de Netlify donde todas las notas tienen casi la misma probabilidad de salir. Pero en cuanto metes pesos basados en teoría armónica, la cosa cambia por completo. Como vimos con el profe Ricardo Peña en la clase del 8 de octubre, un proceso markoviano no es lanzar una moneda al aire sin ton ni son; es capturar la estructura condicional de un sistema paso a paso.
+# Uno empieza programando estas cadenas pensando que la música va a sonar robótica o totalmente al azar, como el prototipo plano de Netlify donde todas las notas tienen casi la misma probabilidad de salir. Pero en cuanto metes pesos basados en teoría armónica, la cosa cambia por completo. Como vimos con el profe Ricardo Peña en la clase del 8 de octubre, un proceso markoviano no es lanzar una moneda al aire sin ton ni son; es capturar la estructura condicional de un sistema paso a paso. El ejemplo de los registros de estudio de 20 días que vimos en clase lo ilustra perfecto: dos alumnos pueden tener exactamente 11 días de estudio y el conteo frecuentista simple de 11 sobre 20 los ve idénticos, pero al descomponer la secuencia en bigramas descubres que uno sigue una regla clara de 70 por ciento de estudiar si estudió ayer, mientras que el otro simplemente tiraba un volado de 50 sobre 50. En la música pasa exactamente lo mismo: una escala diatónica tiene las mismas 7 notas, pero la diferencia entre una melodía coherente y puro ruido radica en la matriz de probabilidades de transición entre estados consecutivos.
 #
-# El ejemplo de los registros de estudio que vimos en clase ilustra perfecto este punto: dos estudiantes pueden tener exactamente 11 días de estudio de 20 registrados en su historial. Si solo cuentas la frecuencia relativa ($11/20 = 55\%$), ambos parecen idénticos. Sin embargo, al descomponer la secuencia en bigramas ($EE, EN, NE, NN$), descubres que uno de ellos estudia con una regla clara ($70\%$ de estudiar si estudió el día anterior), mientras que el otro simplemente tiraba un volado. En la música pasa exactamente lo mismo: una escala diatónica tiene las mismas 7 notas, pero la diferencia entre una melodía coherente y ruido incoherente radica en la matriz de probabilidades de transición entre estados consecutivos.
+# Sin embargo, la música que disfrutamos culturalmente no es una caminata infinita que deambula sin rumbo; vive de la repetición deliberada de motivos, estribillos y simetrías periódicas. Una cadena de primer orden padece de amnesia temporal: solo sabe en qué nota está parada hoy, pero ignora por completo si esa nota forma parte de una frase melódica que ya se tocó dos veces o si la pieza va comenzando o terminando. Para incorporar patrones repetitivos reales tendríamos que subir a cadenas de orden superior con memoria de 3 o 4 pasos, o emplear modelos de orden variable como vimos con el modelo de lenguaje de 3 palabras de Rodrigo Castellanos ("él", "gato", "duerme"). En aquel ejercicio de clase, las probabilidades iban evolucionando en cada paso a partir del vector inicial hasta estabilizarse tras unas 20 iteraciones, exactamente igual a como el algoritmo PageRank de Larry Page calcula la relevancia de páginas en la web mediante caminantes aleatorios. No obstante, al aumentar la memoria en música el espacio de estados explota y el modelo termina repitiendo fragmentos de memoria en vez de componer material nuevo.
 #
-# ### 3.1. Incorporación de patrones repetitivos en el modelo
+# Por otro lado, el modelo sí tiene la capacidad de aprender la estadística local de un estilo si le suministramos un dataset de archivos MIDI de compositores barrocos o solos de jazz y calculamos las probabilidades de transición por máxima verosimilitud contando bigramas con suavizado de Laplace o Kneser Ney. Al hacer esto, la matriz absorbe los giros idiomáticos locales de inmediato, como la evitación estricta de quintas paralelas o la resolución obligada de dominante a tónica. Pero el modelo se topa con un límite estructural insalvable: carece por completo de teleología. La música tonal humana es teleológica porque plantea una tensión armónica que tarda 16 o 32 compases en resolver hacia una meta. Una cadena markoviana solo sabe qué nota conviene tocar en el siguiente medio segundo. Además, según la teoría generativa de Lerdahl y Jackendoff, el cerebro procesa la música como árboles jerárquicos de reducción similares a la sintaxis lingüística de Chomsky, con estructuras anidadas que un autómata finito regular no puede modelar, a lo que se suma que una polifonía real a 4 voces dispara el espacio conjunto a 20736 estados.
 #
-# La música que disfrutamos culturalmente no es una caminata aleatoria infinita; está construida sobre la repetición deliberada de motivos, estribillos y simetrías periódicas. Una cadena de primer orden sufre de **amnesia temporal**: solo sabe en qué nota está parado en el instante $t$, pero ignora por completo si esa nota forma parte de una frase que ya se tocó dos veces o si estamos al inicio o al final de una pieza.
-#
-# Para incorporar patrones repetitivos reales se pueden aplicar varias estrategias matemáticas:
-#
-# 1. **Cadenas de Markov de orden superior ($k$ pasos de memoria):**  
-#    Hacer que la probabilidad dependa de los últimos $k$ estados:
-#    $$P(X_{t+1} \mid X_t, X_{t-1}, \dots, X_{t-k+1})$$
-#    Al fijar $k=3$ o $k=4$, el modelo ya no predice notas sueltas sino trigramas o tetragramas melódicos, memorizando motivos y frases completas. Su desventaja directa es que el espacio de estados explota exponencialmente ($|S|^k$), haciendo que la matriz sea sumamente dispersa y tienda a repetir de memoria el material de entrenamiento sin innovar.
-#
-# 2. **Modelos de Markov de orden variable (VMM / Prediction Suffix Trees):**  
-#    En vez de congelar una memoria $k$ fija para todo, el modelo usa algoritmos como PPM (Prediction by Partial Matching) para evaluar dinámicamente cuánta historia pasada aporta información predictiva real. Si un motivo de 5 notas aparece frecuentemente, lo preserva como un bloque; si la frase es transitoria, reduce el contexto a primer orden.
-#
-# 3. **Cadenas de Markov jerárquicas (Hierarchical HMM):**  
-#    Separar el proceso en dos niveles coordinados:
-#    * **Nivel macro:** Una cadena superior gobierna la estructura de la forma musical (Intro $\to$ Verso $\to$ Coro $\to$ Verso $\to$ Coro $\to$ Outro) o la progresión de acordes por compás.
-#    * **Nivel micro:** Cadenas melódicas condicionadas por el estado macro activo. Al ciclar la cadena macro, los patrones melódicos se repiten periódicamente de forma natural.
-#
-# 4. **Aumento del espacio de estados con métrica rítmica:**  
-#    Definir el estado como un par ordenado $S_t = (\text{nota}_t, \text{tiempo\_de\_compás}_t)$, donde el tiempo de compás cicla periódicamente en $1, 2, 3, 4$. Esto obliga a que los tiempos fuertes del compás resuelvan siempre en notas de reposo tonal, garantizando simetría rítmica periódica.
-#
-# ### 3.2. ¿El modelo podría aprender un estilo musical?
-#
-# **Sí, el modelo puede aprender la estadística local de un estilo**, pero no su arquitectura formal global.
-#
-# Si alimentamos al modelo con un corpus representativo de archivos MIDI de un género específico (por ejemplo, corales barrocos de J.S. Bach, solos de trompeta de jazz bebop o melodías tradicionales folclóricas), podemos calcular los parámetros de la matriz directamente mediante **Estimación de Máxima Verosimilitud (MLE)** contando la frecuencia de aparición de bigramas en los datos:
-# $$\hat{P}_{ij} = \frac{C(s_i \to s_j)}{\sum_k C(s_i \to s_k)}$$
-#
-# Para evitar que transiciones válidas no observadas en el corpus queden con probabilidad cero, se aplica suavizado clásico de Laplace o Kneser Ney:
-# $$\hat{P}_{ij}^{\text{Laplace}} = \frac{C(s_i \to s_j) + \alpha}{C(s_i) + \alpha |S|}$$
-#
-# Al hacer esto, la matriz absorbe las "huellas dactilares" estadísticas del estilo:
-# * En música barroca, aprenderá la estricta evitación de saltos de quinta paralela y la alta recurrencia de cadencias auténticas ($V \to I$).
-# * En blues, aprenderá la alta frecuencia de notas de paso cromáticas y la alternancia cíclica de grados I, IV y V.
-# * En música pentatónica tradicional, reflejará probabilidades nulas para los semitonos diatónicos y alta preferencia por saltos de tercera menor.
-#
-# De hecho, históricamente sistemas pioneros como la *Illiac Suite* (Hiller e Isaacson, 1957) o los experimentos de David Cope (*EMI*) demostraron que reglas markovianas capturan de manera asombrosa los giros melódicos característicos de compositores como Mozart o Chopin a escala de frase inmediata.
-#
-# ### 3.3. Limitaciones intrínsecas del modelo
-#
-# A pesar de su elegancia y bajo costo de cómputo, las cadenas de Markov presentan limitaciones conceptuales insalvables para la música compleja:
-#
-# 1. **Amnesia estructural y falta de dirección teleológica:**  
-#    La música tonal es un arte que avanza hacia una meta (teleológico). Una obra plantea una tensión en el compás 4 que tarda 16 o 32 compases en resolver. Un modelo markoviano no tiene la menor idea de "hacia dónde va la canción"; solo calcula qué nota es probable en el siguiente medio segundo. Esto ocasiona una deriva errática permanente, vagando en círculos sin clímax ni desenlace orgánico.
-#
-# 2. **Incapacidad para capturar jerarquías anidadas:**  
-#    La teoría generativa de la música tonal (Lerdahl y Jackendoff) demostró que el cerebro humano procesa la música como árboles jerárquicos de reducción, idénticos a la sintaxis lingüística de Chomsky. Una cadena de Markov es un autómata finito regular (tipo 3 en la jerarquía de Chomsky), lo que la vuelve matemáticamente incapaz de procesar estructuras con paréntesis anidados, como formas ternarias $A - B - A$ o frases de pregunta y respuesta separadas por decenas de notas.
-#
-# 3. **Explosión combinatoria en polifonía:**  
-#    Modelar una sola voz con 12 notas requiere una matriz modesta de $12 \times 12 = 144$ casillas. Pero si queremos modelar polifonía real a 4 voces (soprano, contralto, tenor y bajo) con ritmos independientes, el espacio conjunto se dispara a $12^4 = 20,736$ estados, lo que exigiría una matriz de más de $430$ millones de parámetros. Esto vuelve inviable el modelado directo sin recurrir a factorizaciones complejas.
-#
-# 4. **Falta de contexto rítmico, dinámico y tímbrico:**  
-#    En la música humana real, una misma nota cambia drásticamente de función según el volumen (*crescendo* o *piano*), el timbre del instrumento y la articulación (*staccato* o *legato*). En la cadena de Markov simple, las notas quedan aisladas como frecuencias desnudas a menos que se multiplique todavía más la dimensionalidad del modelo.
-#
-# Por estas razones, los modelos de vanguardia en generación musical han migrado de cadenas de Markov hacia arquitecturas de aprendizaje profundo con mecanismos de atención (*Transformers* como MusicLM o MuseNet), capaces de mantener relaciones de dependencia entre eventos distantes por cientos o miles de pasos temporales.
+# Al final, igual que ocurre con la teoría de colas M/M/1 y el dimensionamiento de cajas de cobro en Walmart que platicamos en clase, el valor de estos modelos no radica en buscar una perfección abstracta sino en construir simuladores ágiles para tomar decisiones. Al implementar duraciones rítmicas variadas y suavizado de envolvente ADSR para eliminar clics acústicos molestos en las ondas senoidales, el script genera bocetos tonales sorprendentemente musicales con un costo computacional mínimo. La industria contemporánea ya resolvió la coherencia musical global migrando hacia modelos neuronales profundos con mecanismos de atención como Transformers, pero como herramienta matemática para comprender cómo la probabilidad condicional gobierna la física del sonido, la cadena de Markov demuestra una potencia pedagógica extraordinaria.
 
 # %% [markdown]
 # ```{=latex}
@@ -480,7 +442,11 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # ## 4. Apéndices
 #
-# Códigos fuente completos organizados por módulos temáticos para garantizar reproducibilidad total.
+# Códigos fuente completos para garantizar reproducibilidad total.
+#
+# ```{=latex}
+# \newpage
+# ```
 #
 # ### Apéndice A: Configuración y parámetros iniciales
 #
@@ -496,14 +462,25 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # def _gt_to_latex(self):
 #     latex_str = self.as_latex()
-#     latex_str = re.sub(r"\\begin\{table\}(\[[^\]]*\])?", r"\\begin{table}[H]\n\\centering", latex_str)
-#     if "lrrrrrrr" in latex_str or "cllrrr" in latex_str:
-#         latex_str = latex_str.replace(r"\begin{tabular*}{\linewidth}", r"\begin{tabular*}{\linewidth}")
-#         latex_str = re.sub(r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont", r"\\small", latex_str)
-#     else:
-#         latex_str = latex_str.replace(r"\begin{tabular*}{\linewidth}", r"\begin{tabular*}{0.75\linewidth}")
-#         latex_str = re.sub(r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont", r"\\normalsize", latex_str)
-#     latex_str = re.sub(r"\\caption\*\{\s*\{\\large\s+([^\}]+)\}\s*\}", r"\\caption*{\\textbf{\\normalsize \1}}", latex_str)
+#     latex_str = re.sub(
+#         r"\\begin\{table\}(\[[^\]]*\])?",
+#         r"\\begin{table}[H]\n\\centering",
+#         latex_str
+#     )
+#     latex_str = latex_str.replace(
+#         r"\begin{tabular*}{\linewidth}",
+#         r"\begin{tabular*}{0.75\linewidth}"
+#     )
+#     latex_str = re.sub(
+#         r"\\fontsize\{[^}]+\}\{[^}]+\}\\selectfont",
+#         r"\\normalsize",
+#         latex_str
+#     )
+#     latex_str = re.sub(
+#         r"\\caption\*\{\s*\{\\large\s+([^\}]+)\}\s*\}",
+#         r"\\caption*{\\textbf{\\normalsize \1}}",
+#         latex_str
+#     )
 #     return latex_str
 #
 # GT._repr_latex_ = _gt_to_latex
@@ -514,17 +491,17 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # overview_data = pd.DataFrame([
 #     {"Parámetro": "Tonalidad base", "Valor": "Re Mayor (D Major)"},
-#     {"Parámetro": "Espacio de estados melódico", "Valor": "7 notas diatónicas (D4 a C#5)"},
-#     {"Parámetro": "Espacio de estados armónico", "Valor": "4 acordes triádicos (D, G, A, Bm)"},
-#     {"Parámetro": "Frecuencia de muestreo acústico", "Valor": "44,100 Hz (Calidad de CD)"},
-#     {"Parámetro": "Afinación y temperamento", "Valor": "12 TET (A4 = 440 Hz)"},
-#     {"Parámetro": "Articulación de onda", "Valor": "Senoidal pura con armónicos y ADSR"},
-#     {"Parámetro": "Duraciones rítmicas", "Valor": "4 figuras variables (120 BPM)"},
+#     {"Parámetro": "Estados melódicos", "Valor": "7 notas (D4 a C#5)"},
+#     {"Parámetro": "Estados armónicos", "Valor": "4 acordes (D, G, A, Bm)"},
+#     {"Parámetro": "Frecuencia muestreo", "Valor": "44,100 Hz (Calidad CD)"},
+#     {"Parámetro": "Afinación", "Valor": "12 TET (A4 = 440 Hz)"},
+#     {"Parámetro": "Articulación", "Valor": "Senoidal con ADSR"},
+#     {"Parámetro": "Duraciones", "Valor": "4 figuras (120 BPM)"},
 # ])
 #
 # gt_overview = (
 #     GT(overview_data)
-#     .tab_header(title="Resumen del Sistema Estocástico y Síntesis Acústica")
+#     .tab_header(title="Resumen del Sistema y Síntesis Acústica")
 #     .cols_align(align="left", columns=["Parámetro"])
 #     .cols_align(align="right", columns=["Valor"])
 # )
@@ -549,7 +526,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #     ratio_to_tonic = freq_val / note_to_freq("D4")
 #     notes_data.append({
 #         "Nota": n,
-#         "Grado armónico": {
+#         "Grado": {
 #             "D4": "I (Tónica)",
 #             "E4": "ii (Supertónica)",
 #             "F#4": "iii (Mediante)",
@@ -565,9 +542,12 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # gt_notes = (
 #     GT(pd.DataFrame(notes_data))
-#     .tab_header(title="Grados de la Escala Diatónica de Re Mayor (D Major)")
-#     .cols_align(align="left", columns=["Nota", "Grado armónico"])
-#     .cols_align(align="right", columns=["MIDI", "Frecuencia (Hz)", "Razón a Tónica"])
+#     .tab_header(title="Grados de la Escala Diatónica de Re Mayor")
+#     .cols_align(align="left", columns=["Nota", "Grado"])
+#     .cols_align(
+#         align="right",
+#         columns=["MIDI", "Frecuencia (Hz)", "Razón a Tónica"]
+#     )
 # )
 # gt_notes
 # ```
@@ -581,15 +561,21 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # ```python
 # import numpy as np
 # from great_tables import GT
-# from act_2.scales import D_MAJOR_NOTES_OCT4, HARMONIC_TRANSITIONS_D_MAJOR
+# from act_2.scales import (
+#     D_MAJOR_NOTES_OCT4,
+#     HARMONIC_TRANSITIONS_D_MAJOR,
+# )
 # from act_2.markov import MarkovChain
 #
-# chain_notes = MarkovChain(D_MAJOR_NOTES_OCT4, HARMONIC_TRANSITIONS_D_MAJOR)
+# chain_notes = MarkovChain(
+#     D_MAJOR_NOTES_OCT4,
+#     HARMONIC_TRANSITIONS_D_MAJOR
+# )
 # df_matrix = chain_notes.to_dataframe()
 #
 # gt_matrix = (
 #     GT(df_matrix.reset_index().rename(columns={"index": "Estado (t)"}))
-#     .tab_header(title="Matriz de Probabilidades de Transición P (Notas en Re Mayor)")
+#     .tab_header(title="Matriz de Probabilidades de Transición P")
 #     .fmt_number(columns=D_MAJOR_NOTES_OCT4, decimals=2)
 #     .cols_align(align="left", columns=["Estado (t)"])
 #     .cols_align(align="right", columns=D_MAJOR_NOTES_OCT4)
@@ -599,9 +585,9 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # is_non_negative = bool(np.all(HARMONIC_TRANSITIONS_D_MAJOR >= 0.0))
 # is_stochastic = bool(np.allclose(row_sums, 1.0, atol=1e-5))
 #
-# print(f"Propiedad 1: ¿Todas las probabilidades son >= 0? : {is_non_negative}")
-# print(f"Propiedad 2: Suma por fila de la matriz:\n{row_sums}")
-# print(f"¿Todas las filas suman exactamente 1.0 (np.allclose)? : {is_stochastic}")
+# print(f"¿Probabilidades >= 0? : {is_non_negative}")
+# print(f"Suma por fila de la matriz:\n{row_sums}")
+# print(f"¿Filas suman 1.0 (allclose)? : {is_stochastic}")
 # ```
 #
 # ```{=latex}
@@ -615,7 +601,10 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # import matplotlib.pyplot as plt
 # from great_tables import GT
 # from act_2.scales import D_MAJOR_NOTES_OCT4
-# from act_2.visualizer import plot_transition_heatmap, plot_stationary_distribution
+# from act_2.visualizer import (
+#     plot_transition_heatmap,
+#     plot_stationary_distribution,
+# )
 #
 # fig_heatmap = plot_transition_heatmap(
 #     chain_notes,
@@ -644,9 +633,12 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # gt_stationary = (
 #     GT(df_stationary)
-#     .tab_header(title="Distribución Estacionaria Asintótica de la Cadena de Notas")
+#     .tab_header(title="Distribución Estacionaria Asintótica")
 #     .cols_align(align="left", columns=["Nota", "Grado"])
-#     .cols_align(align="right", columns=["Probabilidad límite", "Porcentaje"])
+#     .cols_align(
+#         align="right",
+#         columns=["Probabilidad límite", "Porcentaje"]
+#     )
 # )
 #
 # fig_stat = plot_stationary_distribution(
@@ -696,10 +688,13 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # gt_melody = (
 #     GT(df_melody_display)
-#     .tab_header(title=f"Secuencia Generada: {N_TRANSICIONES} Transiciones Estocásticas")
+#     .tab_header(title=f"Secuencia: {N_TRANSICIONES} Transiciones")
 #     .cols_align(align="center", columns=["Paso"])
 #     .cols_align(align="left", columns=["Estado ant.", "Nota"])
-#     .cols_align(align="right", columns=["Frecuencia", "Duración", "Tiempo acum."])
+#     .cols_align(
+#         align="right",
+#         columns=["Frecuencia", "Duración", "Tiempo acum."]
+#     )
 # )
 #
 # display(Audio(audio_wave, rate=DEFAULT_SAMPLE_RATE))
