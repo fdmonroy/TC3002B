@@ -25,17 +25,17 @@
 #
 # ## 1. Introducción
 #
-# Una melodía se define acústicamente como una secuencia temporal de notas discretas con alturas y duraciones determinadas. Una pregunta fundamental en la teoría de la información y el análisis de sistemas es si dicha secuencia de cambios puede considerarse y modelarse formalmente como un **proceso estocástico**.
+# Una melodía se define como una secuencia temporal de notas discretas con alturas y duraciones determinadas. En teoría de la información y sistemas estocásticos, surge la pregunta de si dicha secuencia puede modelarse formalmente como un proceso estocástico.
 #
-# Un proceso estocástico es una colección de variables aleatorias $\{X_t : t \in T\}$ indexadas por un conjunto temporal $T$. En la música tonal occidental, la sucesión de eventos sonoros no constituye ruido caótico ni tampoco una trayectoria estrictamente determinista: está gobernada por principios de consonancia física, tensión armónica y tendencias de resolución melódica. Por ende, la música constituye un proceso estocástico con una estructura definida de dependencia temporal.
+# Un proceso estocástico es una colección de variables aleatorias $\{X_t : t \in T\}$ indexadas en el tiempo. En la música tonal occidental, la sucesión de notas no es ruido caótico ni tampoco una trayectoria estrictamente determinista: responde a principios de consonancia física, tensión armónica y resolución. Por ello, la música constituye un proceso estocástico con estructura de dependencia temporal.
 #
 # El objetivo principal de esta práctica consiste en:
-# 1. Diseñar una cadena de Markov de tiempo discreto que modele las transiciones entre notas de la escala diatónica de Re Mayor (D Major) y acordes armónicos.
-# 2. Representar la dinámica del sistema mediante una matriz de transiciones y validar computacionalmente sus propiedades estocásticas.
+# 1. Diseñar una cadena de Markov de tiempo discreto sobre la escala de Re Mayor (D Major) y acordes armónicos.
+# 2. Representar la dinámica mediante una matriz de transiciones y validar sus propiedades estocásticas.
 # 3. Implementar un generador pseudoaleatorio de transiciones melódicas y acústicas.
-# 4. Sintetizar físicamente cada tono empleando frecuencia fundamental y duración variable con suavizado de envolvente ADSR para prevenir distorsión acústica.
+# 4. Sintetizar físicamente cada tono con frecuencia y duración variable usando envolvente ADSR para evitar distorsión.
 # 5. Analizar la convergencia hacia la distribución estacionaria mediante las ecuaciones de Chapman Kolmogorov.
-# 6. Elaborar una reflexión profunda sobre la incorporación de patrones repetitivos, el aprendizaje de estilos mediante estimación empírica y las limitaciones estructurales del modelo.
+# 6. Elaborar una reflexión sobre patrones repetitivos, aprendizaje de estilos y limitaciones del modelo.
 #
 # *(Ver Apéndice A para el código de configuración y parámetros)*
 
@@ -49,7 +49,8 @@ import seaborn as sns
 from great_tables import GT
 from IPython.display import Audio, display
 
-# Habilitar soporte de tablas en LaTeX para exportación a PDF igualando fuente del documento
+# Habilitar soporte de tablas en LaTeX para exportación a PDF
+# igualando la fuente del documento
 def _gt_to_latex(self):
     latex_str = self.as_latex()
     latex_str = re.sub(
@@ -127,14 +128,14 @@ gt_overview
 #
 # ## 2. Desarrollo
 #
-# ### 2.1. Escala diatónica y representación del espacio de estados
+# ### 2.1. Escala diatónica
 #
-# Conforme a los principios matemáticos expuestos en el análisis acústico de Lemnismath (*¿Por qué tenemos 12 notas musicales?*), la física del sonido se fundamenta en ondas periódicas caracterizadas por amplitud y frecuencia. Al pulsar una cuerda o columna de aire no se emite una frecuencia aislada sino una superposición de armónicos enteros $f_k = k \cdot f_1$.
+# Conforme a los principios de física acústica analizados por Lemnismath, el sonido musical se fundamenta en ondas periódicas caracterizadas por amplitud y frecuencia. Al pulsar una cuerda o columna de aire no se emite una frecuencia aislada sino armónicos enteros $f_k = k \cdot f_1$.
 #
-# La consonancia acústica entre dos tonos depende de la coincidencia de sus espectros: la octava (razón 2:1) aporta identidad tonal y la quinta justa (razón 3:2) aporta equilibrio acústico. Al encadenar 12 quintas justas sucesivas se arriba a una discrepancia matemática respecto a 7 octavas exactas, conocida como la coma pitagórica ($1.01364$). Para resolver dicha incompatibilidad geométrica, el sistema de **temperamento igual de 12 tonos (12 TET)** divide la octava en 12 semitonos idénticos cuya razón de frecuencia constante es:
+# La consonancia depende de la coincidencia espectral: la octava (razón 2:1) aporta identidad tonal y la quinta justa (razón 3:2) aporta equilibrio acústico. Al encadenar 12 quintas sucesivas surge una discrepancia respecto a 7 octavas conocida como coma pitagórica (1.01364). El sistema de temperamento igual de 12 tonos (12 TET) resuelve esto dividiendo la octava en 12 semitonos idénticos con razón constante:
 # $$r = 2^{1/12} \approx 1.059463094$$
 #
-# La frecuencia $f$ de cualquier nota se calcula a partir de su índice MIDI $n$ tomando como referencia universal la nota La 4 ($A_4 = 440\text{ Hz}$, MIDI 69):
+# La frecuencia $f$ de cada nota se obtiene desde su índice MIDI $n$ referenciado a La 4 ($A_4 = 440\text{ Hz}$, MIDI 69):
 # $$f(n) = 440 \cdot 2^{\frac{n - 69}{12}}\text{ Hz}$$
 #
 # *(Ver Apéndice B para el código de cálculo acústico)*
@@ -174,29 +175,29 @@ gt_notes = (
 gt_notes
 
 # %% [markdown]
-# *Nota sobre temperamento acústico:* En el sistema 12 TET, la razón constante $2^{1/12}$ permite transportar melodías entre tonalidades preservando intervalos idénticos, a cambio de una desviación imperceptible de las quintas puras, asegurando estabilidad armónica completa.
+# *Nota sobre temperamento acústico:* La razón constante $2^{1/12}$ permite transportar melodías preservando intervalos, asegurando consonancia uniforme en todo el registro.
 #
-# ### 2.2. Matriz de transiciones y validación estocástica (20%)
+# ### 2.2. Matriz de transición
 #
 # Una cadena de Markov homogénea y de tiempo discreto se formaliza como una tupla $(S, P, \pi^{(0)})$:
-# * $S = \{s_1, s_2, \dots, s_m\}$: Espacio discreto de estados (notas o acordes).
-# * $P \in \mathbb{R}^{m \times m}$: Matriz de probabilidades de transición donde $P_{ij} = P(X_{t+1} = s_j \mid X_t = s_i)$.
-# * $\pi^{(0)} \in \mathbb{R}^m$: Vector de distribución de probabilidad inicial.
+# * $S = \{s_1, \dots, s_m\}$: Espacio discreto de estados (notas o acordes).
+# * $P \in \mathbb{R}^{m \times m}$: Matriz de probabilidades de transición con $P_{ij} = P(X_{t+1} = s_j \mid X_t = s_i)$.
+# * $\pi^{(0)} \in \mathbb{R}^m$: Vector de distribución inicial.
 #
-# **Propiedad de Markov:**  
-# El estado futuro depende únicamente del estado inmediatamente presente, siendo condicionalmente independiente de la historia pasada:
+# Propiedad de Markov:  
+# El estado futuro depende únicamente del estado presente:
 # $$P(X_{t+1} = s_j \mid X_t = s_i, \dots, X_0 = s_0) = P(X_{t+1} = s_j \mid X_t = s_i) = P_{ij}$$
 #
-# Como expuso el profesor Luis Ricardo Peña Llamas en la clase del 8 de octubre mediante el ejemplo de los registros de estudio de 20 días con 11 días de estudio cada uno, el conteo frecuentista simple ($11/20$) resulta ciego ante la estructura temporal. Mientras que un registro proviene de una regla estocástica ($70\%$ de estudiar si se estudió hoy y $40\%$ si no), el otro proviene de un volado independiente ($50/50$). El análisis de pares ordenados de tokens adyacentes (**bigramas**) es la técnica matemática que permite estimar las probabilidades de transición y revelar la verdadera dinámica subyacente.
+# Como expuso el profesor Ricardo Peña en clase con el ejemplo de los registros de estudio de 20 días con 11 días de estudio, el conteo frecuentista simple (11 sobre 20) ignora el orden temporal. Mientras un registro responde a una regla estocástica (70% de estudiar si se estudió hoy), el otro proviene de un volado independiente (50 sobre 50). El análisis de bigramas permite estimar transiciones y revelar la dinámica subyacente.
 #
-# Las probabilidades de la matriz se diseñaron siguiendo las funciones armónicas de la música tonal:
-# * **Tónica (D4):** Centro de gravedad tonal. Estabilidad máxima que distribuye transiciones fluidas hacia subdominante (G4) y dominante (A4).
-# * **Supertónica (E4):** Tensión de paso que conduce preferentemente hacia la dominante (A4, 25%) y retorno a tónica (D4, 30%).
-# * **Mediante (F#4):** Color del modo mayor; conecta con subdominante (G4, 30%) y tónica (D4, 20%).
-# * **Subdominante (G4):** Fuerza armónica intermedia con fuerte inclinación hacia la dominante (A4, 35%).
-# * **Dominante (A4):** Grado de máxima tensión armónica. Manifiesta atracción imperativa de resolución hacia la tónica (D4, 50%) o cadencia rota a submediante (B4, 15%).
-# * **Submediante (B4):** Centro tonal relativo menor; conduce a subdominante (G4, 25%) y dominante (A4, 20%).
-# * **Sensible (C#5):** Grado a un semitono de la tónica superior. En conducción de voces tiene resolución obligada ascendente hacia la tónica (D4/D5), modelada aquí con $70\%$ de probabilidad.
+# Las probabilidades se definieron según la armonía funcional:
+# * Tónica (D4): Centro de gravedad tonal de máxima estabilidad.
+# * Supertónica (E4): Grado de paso que conduce a la dominante (A4, 25%) o tónica (D4, 30%).
+# * Mediante (F#4): Nota modal que conecta con la subdominante (G4, 30%) y tónica (D4, 20%).
+# * Subdominante (G4): Tensión intermedia orientada a la dominante (A4, 35%).
+# * Dominante (A4): Máxima tensión armónica que resuelve en tónica (D4, 50%) o submediante (B4, 15%).
+# * Submediante (B4): Centro relativo menor que conduce a subdominante (G4, 25%) o dominante (A4, 20%).
+# * Sensible (C#5): Inestabilidad melódica con resolución ascendente obligada a tónica (D4, 70%).
 #
 # *(Ver Apéndice C para el código de matriz y verificación)*
 
@@ -224,11 +225,11 @@ print(f"Suma por fila de la matriz:\n{row_sums}")
 print(f"¿Filas suman 1.0 (allclose)? : {is_stochastic}")
 
 # %% [markdown]
-# *Nota sobre la matriz estocástica:* A diferencia de los modelos con distribución uniforme plana (~0.14) del prototipo web de Netlify, la matriz diseñada incorpora polaridad armónica. Cada fila representa la distribución condicional $P(X_{t+1} \mid X_t = s_i)$, sumando estrictamente 1.0.
+# *Nota sobre la matriz estocástica:* Cada fila representa la distribución condicional $P(X_{t+1} \mid X_t = s_i)$, sumando estrictamente 1.0.
 #
-# ### 2.3. Mapa de calor y dinámica de probabilidades
+# ### 2.3. Mapa de calor
 #
-# La siguiente figura ilustra visualmente la densidad de transición. Las intensidades más oscuras reflejan las resoluciones armónicas más fuertes (como la sensible C#5 hacia la tónica D4 con 0.70, y la dominante A4 hacia la tónica D4 con 0.50):
+# La siguiente figura ilustra visualmente la densidad de transición. Las celdas más oscuras indican las resoluciones armónicas predominantes (sensible C#5 a tónica D4 con 0.70, y dominante A4 a tónica D4 con 0.50):
 #
 # *(Ver Apéndice D para el código de graficación)*
 
@@ -240,19 +241,17 @@ fig_heatmap = plot_transition_heatmap(
 plt.show()
 
 # %% [markdown]
-# *Nota sobre resoluciones armónicas:* El mapa de calor ilustra que la tónica actúa como sumidero probabilístico natural del sistema, atrayendo fuertemente tanto al quinto grado dominante como al séptimo grado sensible.
+# *Nota sobre resoluciones armónicas:* La tónica actúa como sumidero probabilístico natural del sistema, atrayendo al quinto grado dominante y al séptimo grado sensible.
 #
-# ### 2.4. Evolución temporal y distribución estacionaria
+# ### 2.4. Distribución estacionaria
 #
-# Conforme a las ecuaciones de Chapman Kolmogorov vistas en clase, la distribución de probabilidad tras $n$ transiciones se obtiene mediante potencias de la matriz estocástica:
+# Según las ecuaciones de Chapman Kolmogorov, la distribución tras $n$ transiciones se obtiene mediante potencias matriciales:
 # $$\pi^{(n)} = \pi^{(0)} \cdot P^n$$
 #
-# Como se demostró en el ejercicio del lenguaje de 3 palabras de Rodrigo Castellanos ("él", "gato", "duerme") presentado en clase, al simular 100 textos iniciales la distribución evoluciona en cada paso y se estabiliza tras aproximadamente 20 transiciones. Esta distribución límite es la **distribución estacionaria** $\pi^*$, que satisface el sistema invariante:
+# En el modelo de tres palabras presentado por Rodrigo Castellanos en clase ("él", "gato", "duerme"), la distribución evoluciona en cada paso y se estabiliza cerca de 20 transiciones. Esta distribución límite $\pi^*$ satisface:
 # $$\pi^* \cdot P = \pi^* \quad \text{con} \quad \sum_{i=1}^m \pi_i = 1$$
 #
-# Este principio es precisamente la base matemática del algoritmo **PageRank** de Larry Page en Google, donde la importancia de una página web se determina mediante la probabilidad estacionaria de un caminante aleatorio en el grafo de hipervínculos.
-#
-# Resolviendo el sistema $(P^T - I)\pi^{*T} = 0$:
+# Este principio sustenta el algoritmo PageRank de Larry Page en Google, modelando la navegación web como una caminata aleatoria.
 #
 # *(Ver Apéndice D para el cálculo de estado estacionario)*
 
@@ -296,28 +295,26 @@ fig_stat = plot_stationary_distribution(
 plt.show()
 
 # %% [markdown]
-# *Nota sobre convergencia asintótica:* La tónica D4 ($25.91\%$) y la dominante A4 ($18.89\%$) concentran casi el $45\%$ de la ocupación temporal asintótica, mientras que la sensible C#5 ($4.37\%$) presenta la menor permanencia, validando que el modelo privilegia el reposo consonante sobre la tensión inestable.
+# *Nota sobre convergencia asintótica:* La tónica D4 (25.91%) y la dominante A4 (18.89%) acumulan cerca del 45% del tiempo en estado estacionario, confirmando el reposo consonante del sistema.
 #
-# ### 2.5. Generador estocástico y síntesis acústica ADSR (40%)
+# ### 2.5. Generador de melodías
 #
-# Para determinar la transición de estados en cada instante $t$, se implementa el muestreo por transformada inversa de la función de distribución acumulada (CDF) condicionada a la fila del estado actual $X_t$.
+# Para determinar cada transición se emplea el método de transformada inversa sobre la distribución acumulada del estado actual.
 #
-# Las funciones de generación de tonos reciben como parámetros fundamentales la **frecuencia** ($f$ en Hz) y la **duración** ($d$ en segundos). Para prevenir discontinuidades de fase que producen chasquidos y clics acústicos molestos, se diseñó e implementó un suavizador de amplitud **ADSR (Attack, Decay, Sustain, Release)**:
-# * **Attack ($0.04\text{ s}$):** Crecimiento lineal de amplitud de 0 a 1.
-# * **Decay ($0.04\text{ s}$):** Decaimiento suave al nivel de sostenimiento ($0.85$).
-# * **Sustain:** Mantenimiento de la energía acústica en el cuerpo de la nota.
-# * **Release ($0.05\text{ s}$):** Extinción suave a cero antes del siguiente tono.
+# Las funciones de síntesis reciben frecuencia fundamental ($f$) y duración ($d$). Para evitar discontinuidades de fase que generen chasquidos acústicos, se aplicó una envolvente ADSR:
+# * Attack (0.04 s): Crecimiento lineal de 0 a 1.
+# * Decay (0.04 s): Descenso al nivel de sostenimiento (0.85).
+# * Sustain: Mantenimiento de amplitud.
+# * Release (0.05 s): Extinción a cero antes del siguiente tono.
 #
-# Asimismo, atendiendo el énfasis del profesor Peña Llamas en clase de no emplear duraciones fijas sino variadas para otorgar naturalidad melódica, se muestrean estocásticamente 4 figuras rítmicas a 120 BPM:
-# * Negra ($0.50\text{ s}$, peso $50\%$).
-# * Corchea ($0.25\text{ s}$, peso $25\%$).
-# * Negra con puntillo ($0.75\text{ s}$, peso $15\%$).
-# * Blanca ($1.00\text{ s}$, peso $10\%$).
+# Siguiendo la recomendación de clase de variar duraciones para mayor naturalidad, se muestrean 4 figuras a 120 BPM: negra (0.50 s, 50%), corchea (0.25 s, 25%), negra con puntillo (0.75 s, 15%) y blanca (1.00 s, 10%).
 #
 # *(Ver Apéndice E para el código del generador y exportación WAV)*
 
 # %%
-export_dir = Path("export") if Path("export").is_dir() else (Path("../export") if Path("../export").is_dir() else Path("export"))
+export_dir = Path("export")
+if not export_dir.is_dir() and Path("../export").is_dir():
+    export_dir = Path("../export")
 export_dir.mkdir(parents=True, exist_ok=True)
 
 generator = MelodyGenerator(chain_notes)
@@ -333,7 +330,6 @@ audio_wave, events_list, df_melody = generator.generate_melody(
 
 output_wav_path = export_dir / "melodia_markov_16.wav"
 export_wav(output_wav_path, audio_wave)
-print(f"\nArchivo WAV exportado exitosamente:\n{output_wav_path}")
 
 # %% [markdown]
 # A continuación se presenta el registro detallado de transiciones paso a paso:
@@ -377,11 +373,11 @@ fig_roll = plot_melody_roll(
 plt.show()
 
 # %% [markdown]
-# *Nota sobre síntesis acústica:* El generador produce transiciones orgánicas paso a paso. La articulación senoidal con envolvente ADSR suprime discontinuidades abruptas y genera tonos limpios con armónicos sutiles.
+# *Nota sobre síntesis acústica:* La envolvente ADSR suprime chasquidos en los tonos senoidales y genera transiciones limpias.
 #
-# ### 2.6. Composición extendida y armonización polifónica
+# ### 2.6. Armonización
 #
-# Para apreciar la textura tonal a mayor escala, se simula una secuencia extendida de 32 pasos y una pieza polifónica a 8 compases donde una cadena markoviana gobierna la progresión armónica ($D - G - A - Bm$) mientras otra cadena genera la línea melódica solista simultáneamente:
+# Para evaluar texturas a mayor escala, se generó una secuencia de 32 pasos y una pieza polifónica a 8 compases donde una cadena gobierna la progresión de acordes ($D - G - A - Bm$) mientras otra genera la línea melódica simultáneamente:
 #
 # *(Ver Apéndice F para el código de armonización)*
 
@@ -394,7 +390,6 @@ audio_32, events_32, df_32 = generator.generate_melody(
     verbose=False
 )
 export_wav(export_dir / "melodia_markov_32.wav", audio_32)
-print(f"Melodía de 32 pasos generada con éxito:\n{export_dir / 'melodia_markov_32.wav'}")
 
 # Pista polifónica armonizada con acordes en Re Mayor
 chain_chords = MarkovChain(CHORD_STATES, CHORD_TRANSITION_MATRIX)
@@ -409,7 +404,6 @@ mix_audio, df_harm = generator.generate_harmonized_track(
     seed=777
 )
 export_wav(export_dir / "melodia_armonizada_8compases.wav", mix_audio)
-print(f"Pista polifónica generada con éxito:\n{export_dir / 'melodia_armonizada_8compases.wav'}")
 
 # %% [markdown]
 # Reproductor de la pieza polifónica armonizada (8 compases completos):
@@ -418,7 +412,7 @@ print(f"Pista polifónica generada con éxito:\n{export_dir / 'melodia_armonizad
 display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 
 # %% [markdown]
-# *Nota sobre acompañamiento armónico:* El acoplamiento de cadenas concurrentes genera riqueza sonora sin elevar exponencialmente la dimensionalidad del espacio de estados individual.
+# *Nota sobre acompañamiento armónico:* El acoplamiento de dos cadenas produce polifonía sin elevar el espacio de estados individual.
 
 # %% [markdown]
 # ```{=latex}
@@ -427,13 +421,13 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # ## 3. Reflexión
 #
-# Uno empieza programando estas cadenas pensando que la música va a sonar robótica o totalmente al azar, como el prototipo plano de Netlify donde todas las notas tienen casi la misma probabilidad de salir. Pero en cuanto metes pesos basados en teoría armónica, la cosa cambia por completo. Como vimos con el profe Ricardo Peña en la clase del 8 de octubre, un proceso markoviano no es lanzar una moneda al aire sin ton ni son; es capturar la estructura condicional de un sistema paso a paso. El ejemplo de los registros de estudio de 20 días que vimos en clase lo ilustra perfecto: dos alumnos pueden tener exactamente 11 días de estudio y el conteo frecuentista simple de 11 sobre 20 los ve idénticos, pero al descomponer la secuencia en bigramas descubres que uno sigue una regla clara de 70 por ciento de estudiar si estudió ayer, mientras que el otro simplemente tiraba un volado de 50 sobre 50. En la música pasa exactamente lo mismo: una escala diatónica tiene las mismas 7 notas, pero la diferencia entre una melodía coherente y puro ruido radica en la matriz de probabilidades de transición entre estados consecutivos.
+# Uno empieza pensando que la música va a sonar robótica o caótica como en el prototipo de Netlify, donde cada nota tiene casi la misma probabilidad de salir. Pero en cuanto incorporas teoría armónica, la melodía cobra sentido. Como vimos con el profe Ricardo Peña en la clase del 8 de octubre, un proceso markoviano modela la dependencia condicional paso a paso. El caso de los registros de estudio de 20 días con 11 días de estudio lo ilustra bien: el conteo frecuentista no distingue entre seguir una regla o tirar una moneda, pero el análisis de bigramas revela la verdadera estructura. En música ocurre igual, pues la coherencia melódica surge de la probabilidad condicional entre notas consecutivas.
 #
-# Sin embargo, la música que disfrutamos culturalmente no es una caminata infinita que deambula sin rumbo; vive de la repetición deliberada de motivos, estribillos y simetrías periódicas. Una cadena de primer orden padece de amnesia temporal: solo sabe en qué nota está parada hoy, pero ignora por completo si esa nota forma parte de una frase melódica que ya se tocó dos veces o si la pieza va comenzando o terminando. Para incorporar patrones repetitivos reales tendríamos que subir a cadenas de orden superior con memoria de 3 o 4 pasos, o emplear modelos de orden variable como vimos con el modelo de lenguaje de 3 palabras de Rodrigo Castellanos ("él", "gato", "duerme"). En aquel ejercicio de clase, las probabilidades iban evolucionando en cada paso a partir del vector inicial hasta estabilizarse tras unas 20 iteraciones, exactamente igual a como el algoritmo PageRank de Larry Page calcula la relevancia de páginas en la web mediante caminantes aleatorios. No obstante, al aumentar la memoria en música el espacio de estados explota y el modelo termina repitiendo fragmentos de memoria en vez de componer material nuevo.
+# La música real depende de la repetición deliberada de motivos y estribillos, pero una cadena de primer orden padece de amnesia temporal porque solo recuerda el estado actual. Para capturar patrones repetitivos se requeriría ampliar la memoria a órdenes superiores o usar modelos de orden variable, similar al ejercicio en clase del modelo de tres palabras de Rodrigo Castellanos ("él", "gato", "duerme") que estabilizó probabilidades tras 20 pasos, o como hace PageRank con caminantes aleatorios. Sin embargo, aumentar la memoria provoca una explosión en el espacio de estados, haciendo que el modelo memorice el corpus en lugar de generar variaciones fluidas.
 #
-# Por otro lado, el modelo sí tiene la capacidad de aprender la estadística local de un estilo si le suministramos un dataset de archivos MIDI de compositores barrocos o solos de jazz y calculamos las probabilidades de transición por máxima verosimilitud contando bigramas con suavizado de Laplace o Kneser Ney. Al hacer esto, la matriz absorbe los giros idiomáticos locales de inmediato, como la evitación estricta de quintas paralelas o la resolución obligada de dominante a tónica. Pero el modelo se topa con un límite estructural insalvable: carece por completo de teleología. La música tonal humana es teleológica porque plantea una tensión armónica que tarda 16 o 32 compases en resolver hacia una meta. Una cadena markoviana solo sabe qué nota conviene tocar en el siguiente medio segundo. Además, según la teoría generativa de Lerdahl y Jackendoff, el cerebro procesa la música como árboles jerárquicos de reducción similares a la sintaxis lingüística de Chomsky, con estructuras anidadas que un autómata finito regular no puede modelar, a lo que se suma que una polifonía real a 4 voces dispara el espacio conjunto a 20736 estados.
+# El modelo puede aprender la estadística local de un estilo estimando probabilidades por máxima verosimilitud sobre bigramas de un corpus MIDI con suavizado de Laplace. Con esto aprende cadencias comunes y evita quintas paralelas. No obstante, carece por completo de teleología: no tiene dirección formal a largo plazo y no sabe hacia dónde va la pieza tras medio segundo. Además, según la teoría de Lerdahl y Jackendoff, la música se organiza en árboles jerárquicos anidados que un autómata finito regular no puede representar, mientras que incorporar polifonía a cuatro voces dispararía el sistema a más de 20 mil estados.
 #
-# Al final, igual que ocurre con la teoría de colas M/M/1 y el dimensionamiento de cajas de cobro en Walmart que platicamos en clase, el valor de estos modelos no radica en buscar una perfección abstracta sino en construir simuladores ágiles para tomar decisiones. Al implementar duraciones rítmicas variadas y suavizado de envolvente ADSR para eliminar clics acústicos molestos en las ondas senoidales, el script genera bocetos tonales sorprendentemente musicales con un costo computacional mínimo. La industria contemporánea ya resolvió la coherencia musical global migrando hacia modelos neuronales profundos con mecanismos de atención como Transformers, pero como herramienta matemática para comprender cómo la probabilidad condicional gobierna la física del sonido, la cadena de Markov demuestra una potencia pedagógica extraordinaria.
+# Al igual que con el análisis de colas M/M/1 y el dimensionamiento de cajas en Walmart discutido en clase, estos modelos sirven para simular escenarios rápidos sin arrastrar historiales pesados. Con duraciones variables y envolvente ADSR para evitar chasquidos en los tonos senoidales, la cadena produce secuencias musicales interesantes con mínimo costo computacional. Aunque la generación actual utilice redes con atención, la cadena de Markov sigue siendo una base intuitiva y elegante para entender procesos estocásticos.
 
 # %% [markdown]
 # ```{=latex}
@@ -448,7 +442,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ### Apéndice A: Configuración y parámetros iniciales
+# ### Apéndice A: Configuración inicial
 #
 # ```python
 # from pathlib import Path
@@ -512,7 +506,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ### Apéndice B: Grados de la escala y frecuencias acústicas
+# ### Apéndice B: Escala diatónica
 #
 # ```python
 # from act_2.scales import D_MAJOR_NOTES_OCT4, note_to_freq, note_to_midi
@@ -556,7 +550,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ### Apéndice C: Matriz de transición y validación estocástica
+# ### Apéndice C: Matriz de transición
 #
 # ```python
 # import numpy as np
@@ -594,7 +588,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ### Apéndice D: Visualización y distribución estacionaria
+# ### Apéndice D: Distribución estacionaria
 #
 # ```python
 # import pandas as pd
@@ -652,7 +646,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ### Apéndice E: Generador estocástico y síntesis acústica ADSR
+# ### Apéndice E: Generador de melodías
 #
 # ```python
 # from pathlib import Path
@@ -711,7 +705,7 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # \newpage
 # ```
 #
-# ### Apéndice F: Composición extendida y armonización polifónica
+# ### Apéndice F: Armonización
 #
 # ```python
 # from pathlib import Path

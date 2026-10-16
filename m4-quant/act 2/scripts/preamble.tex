@@ -1,7 +1,11 @@
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage{float}
+\usepackage{etoolbox}
 
 \makeatletter
 \g@addto@macro\@floatboxreset\centering
 \makeatother
+
+\AtBeginEnvironment{Highlighting}{\small}
+\AtBeginEnvironment{verbatim}{\small}
