@@ -192,9 +192,9 @@ gt_notes
 # El estado futuro depende únicamente del estado presente:
 # $$P(X_{t+1} = s_j \mid X_t = s_i, \dots, X_0 = s_0) = P(X_{t+1} = s_j \mid X_t = s_i) = P_{ij}$$
 #
-# Esta memoria nula se asemeja al juego de Serpientes y Escaleras visto en clase, donde la casilla futura depende solo de la casilla actual y el dado, a diferencia de extraer cartas de una baraja sin reemplazo donde la baraja cambia con cada extracción previa.
+# Esta memoria nula se asemeja al juego de Serpientes y Escaleras, donde la casilla futura depende solo de la casilla actual y el dado, a diferencia de extraer cartas de una baraja sin reemplazo donde la baraja cambia con cada extracción previa.
 #
-# Como expuso el profesor Ricardo Peña en clase con el ejemplo de los registros de 20 días con 11 días de estudio, el conteo frecuentista simple (11 sobre 20) ignora el orden temporal. Mientras un registro responde a una regla estocástica (70% de estudiar si se estudió hoy), el otro proviene de un volado independiente (50 sobre 50). El análisis de bigramas permite estimar transiciones y modelar la dependencia serial. Siguiendo el planteamiento de la actividad, por ejemplo, la probabilidad de cambiar a la nota SI (B4) dado que actualmente suena la nota RE (D4) se fija en $P(B4 \mid D4) = 0.10$.
+# En el modelado estocástico, el análisis frecuentista simple sobre registros temporales ignora el orden serial. Por ejemplo, en un registro de 20 días con 11 días de actividad, el promedio marginal no distingue entre un proceso condicionado (70% de probabilidad condicionada) y un volado independiente (50 sobre 50). El análisis de bigramas permite estimar transiciones y modelar la dependencia serial. Siguiendo el planteamiento de la actividad, por ejemplo, la probabilidad de cambiar a la nota SI (B4) dado que actualmente suena la nota RE (D4) se fija en $P(B4 \mid D4) = 0.10$.
 #
 # Las probabilidades se definieron según la armonía funcional:
 # * Tónica (D4): Centro de gravedad tonal de máxima estabilidad.
@@ -259,7 +259,7 @@ plt.show()
 # Según las ecuaciones de Chapman Kolmogorov, la distribución tras $n$ transiciones se obtiene mediante potencias matriciales:
 # $$\pi^{(n)} = \pi^{(0)} \cdot P^n$$
 #
-# En el modelo de lenguaje de tres palabras presentado por Rodrigo Castellanos en clase ("él", "gato", "duerme"), al partir de 100 textos iniciales distribuidos como [50, 40, 10], el vector evoluciona tras 2 pasos a [0.29, 0.33, 0.36] y se estabiliza cerca de 20 transiciones. Esta distribución límite $\pi^*$ satisface:
+# En un modelo de lenguaje de tres estados léxicos ("él", "gato", "duerme"), al partir de 100 secuencias iniciales distribuidas como [50, 40, 10], el vector evoluciona tras 2 pasos a [0.29, 0.33, 0.36] y se estabiliza cerca de 20 transiciones. Esta distribución límite $\pi^*$ satisface:
 # $$\pi^* \cdot P = \pi^* \quad \text{con} \quad \sum_{i=1}^m \pi_i = 1$$
 #
 # Este principio sustenta el algoritmo PageRank de Larry Page en Google, modelando la navegación web como una caminata aleatoria.
@@ -442,13 +442,13 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #
 # ## 3. Reflexión
 #
-# Uno empieza pensando que la música va a sonar robótica o caótica como en el prototipo de Netlify, donde cada nota tiene casi la misma probabilidad de salir. Pero en cuanto incorporas teoría armónica, la melodía cobra sentido. Como vimos con el profe Ricardo Peña en la clase del 8 de octubre, un proceso markoviano modela la dependencia condicional paso a paso. El caso de los registros de estudio de 20 días con 11 días de estudio lo ilustra bien: el conteo frecuentista no distingue entre seguir una regla o tirar una moneda, pero el análisis de bigramas revela la verdadera estructura. En música ocurre igual, pues la coherencia melódica surge de la probabilidad condicional entre notas consecutivas.
+# Uno empieza pensando que la música va a sonar robótica o caótica como en el prototipo de Netlify, donde cada nota tiene casi la misma probabilidad de salir. Pero en cuanto incorporas teoría armónica, la melodía cobra sentido. Un proceso markoviano modela la dependencia condicional paso a paso. El caso de registros de 20 observaciones con 11 eventos positivos lo ilustra bien: el conteo frecuentista no distingue entre seguir una regla o tirar una moneda, pero el análisis de bigramas revela la verdadera estructura. En música ocurre igual, pues la coherencia melódica surge de la probabilidad condicional entre notas consecutivas.
 #
-# La música real depende de la repetición deliberada de motivos y estribillos, pero una cadena de primer orden padece de amnesia temporal porque solo recuerda el estado actual. Para capturar patrones repetitivos se requeriría ampliar la memoria a órdenes superiores o usar modelos de orden variable, similar al ejercicio en clase del modelo de tres palabras de Rodrigo Castellanos ("él", "gato", "duerme") que estabilizó probabilidades tras 20 pasos, o como hace PageRank con caminantes aleatorios. Sin embargo, aumentar la memoria provoca una explosión en el espacio de estados, haciendo que el modelo memorice el corpus en lugar de generar variaciones fluidas.
+# La música real depende de la repetición deliberada de motivos y estribillos, pero una cadena de primer orden padece de amnesia temporal porque solo recuerda el estado actual. Para capturar patrones repetitivos se requeriría ampliar la memoria a órdenes superiores o usar modelos de orden variable, similar a modelos de juguete de tres palabras ("él", "gato", "duerme") que estabilizan probabilidades tras 20 pasos, o como hace PageRank con caminantes aleatorios. Sin embargo, aumentar la memoria provoca una explosión en el espacio de estados, haciendo que el modelo memorice el corpus en lugar de generar variaciones fluidas.
 #
 # El modelo puede aprender la estadística local de un estilo estimando probabilidades por máxima verosimilitud sobre bigramas de un corpus MIDI con suavizado de Laplace. Con esto aprende cadencias comunes y evita quintas paralelas. No obstante, carece por completo de teleología: no tiene dirección formal a largo plazo y no sabe hacia dónde va la pieza tras medio segundo. Además, según la teoría de Lerdahl y Jackendoff, la música se organiza en árboles jerárquicos anidados que un autómata finito regular no puede representar, mientras que incorporar polifonía a cuatro voces dispararía el sistema a más de 20 mil estados.
 #
-# Al igual que con el análisis de colas M/M/1 y el dimensionamiento de cajas en Walmart discutido en clase, estos modelos sirven para simular escenarios rápidos sin arrastrar historiales pesados. Con duraciones variables y envolvente ADSR para evitar chasquidos en los tonos senoidales, la cadena produce secuencias musicales interesantes con mínimo costo computacional. Aunque la generación actual utilice redes con atención, la cadena de Markov sigue siendo una base intuitiva y elegante para entender procesos estocásticos.
+# Al igual que con el análisis de colas M/M/1 y el dimensionamiento de servidores en sistemas de servicio, estos modelos sirven para simular escenarios rápidos sin arrastrar historiales pesados. Con duraciones variables y envolvente ADSR para evitar chasquidos en los tonos senoidales, la cadena produce secuencias musicales interesantes con mínimo costo computacional. Aunque la generación actual utilice redes con atención, la cadena de Markov sigue siendo una base intuitiva y elegante para entender procesos estocásticos.
 
 # %% [markdown]
 # ```{=latex}
