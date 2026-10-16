@@ -49,6 +49,10 @@ import seaborn as sns
 from great_tables import GT
 from IPython.display import Audio, display
 
+# Directorios de artefactos e imagenes
+assets_dir = Path("assets") if Path("assets").is_dir() else Path("../assets")
+assets_dir.mkdir(parents=True, exist_ok=True)
+
 # Habilitar soporte de tablas en LaTeX para exportación a PDF
 # igualando la fuente del documento
 def _gt_to_latex(self):
@@ -240,6 +244,11 @@ fig_heatmap = plot_transition_heatmap(
     chain_notes,
     title="Mapa de Calor: Matriz de Transición Armónica (Re Mayor)"
 )
+fig_heatmap.savefig(
+    assets_dir / "mapa_calor_transiciones.png",
+    dpi=200,
+    bbox_inches="tight"
+)
 plt.show()
 
 # %% [markdown]
@@ -293,6 +302,11 @@ gt_stationary
 fig_stat = plot_stationary_distribution(
     chain_notes,
     title="Ocupación Límite Asintótica en Estado Estacionario"
+)
+fig_stat.savefig(
+    assets_dir / "distribucion_estacionaria.png",
+    dpi=200,
+    bbox_inches="tight"
 )
 plt.show()
 
@@ -371,6 +385,11 @@ fig_roll = plot_melody_roll(
     sequence=[e.curr_state for e in events_list],
     durations=[e.duration_s for e in events_list],
     title="Trayectoria Melódica Estocástica (16 pasos en Re Mayor)"
+)
+fig_roll.savefig(
+    assets_dir / "trayectoria_melodica_16.png",
+    dpi=200,
+    bbox_inches="tight"
 )
 plt.show()
 
@@ -455,6 +474,9 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # import seaborn as sns
 # from great_tables import GT
 # from IPython.display import Audio, display
+#
+# assets_dir = Path("assets") if Path("assets").is_dir() else Path("../assets")
+# assets_dir.mkdir(parents=True, exist_ok=True)
 #
 # def _gt_to_latex(self):
 #     latex_str = self.as_latex()
@@ -606,6 +628,11 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #     chain_notes,
 #     title="Mapa de Calor: Matriz de Transición Armónica (Re Mayor)"
 # )
+# fig_heatmap.savefig(
+#     assets_dir / "mapa_calor_transiciones.png",
+#     dpi=200,
+#     bbox_inches="tight"
+# )
 # plt.show()
 #
 # pi_stationary = chain_notes.compute_stationary_distribution()
@@ -640,6 +667,11 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # fig_stat = plot_stationary_distribution(
 #     chain_notes,
 #     title="Ocupación Límite Asintótica en Estado Estacionario"
+# )
+# fig_stat.savefig(
+#     assets_dir / "distribucion_estacionaria.png",
+#     dpi=200,
+#     bbox_inches="tight"
 # )
 # plt.show()
 # ```
@@ -701,6 +733,11 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 #     sequence=[e.curr_state for e in events_list],
 #     durations=[e.duration_s for e in events_list],
 #     title="Trayectoria Melódica Estocástica (16 pasos en Re Mayor)"
+# )
+# fig_roll.savefig(
+#     assets_dir / "trayectoria_melodica_16.png",
+#     dpi=200,
+#     bbox_inches="tight"
 # )
 # plt.show()
 # ```
