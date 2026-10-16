@@ -97,7 +97,7 @@ class MelodyGenerator:
             ))
             
             if verbose:
-                print(f"Paso {step:02d}: Transición {curr_note} -> {next_note} | Frecuencia: {freq:.2f} Hz | Duración: {duration:.2f} s")
+                print(f"Paso {step:02d}: {curr_note} a {next_note} | {freq:.2f} Hz | {duration:.2f} s")
                 
             audio_segments.append(generate_tone(freq, duration, self.sample_rate))
             cum_time += duration
