@@ -188,7 +188,9 @@ gt_notes
 # El estado futuro depende únicamente del estado presente:
 # $$P(X_{t+1} = s_j \mid X_t = s_i, \dots, X_0 = s_0) = P(X_{t+1} = s_j \mid X_t = s_i) = P_{ij}$$
 #
-# Como expuso el profesor Ricardo Peña en clase con el ejemplo de los registros de estudio de 20 días con 11 días de estudio, el conteo frecuentista simple (11 sobre 20) ignora el orden temporal. Mientras un registro responde a una regla estocástica (70% de estudiar si se estudió hoy), el otro proviene de un volado independiente (50 sobre 50). El análisis de bigramas permite estimar transiciones y revelar la dinámica subyacente.
+# Esta memoria nula se asemeja al juego de Serpientes y Escaleras visto en clase, donde la casilla futura depende solo de la casilla actual y el dado, a diferencia de extraer cartas de una baraja sin reemplazo donde la baraja cambia con cada extracción previa.
+#
+# Como expuso el profesor Ricardo Peña en clase con el ejemplo de los registros de 20 días con 11 días de estudio, el conteo frecuentista simple (11 sobre 20) ignora el orden temporal. Mientras un registro responde a una regla estocástica (70% de estudiar si se estudió hoy), el otro proviene de un volado independiente (50 sobre 50). El análisis de bigramas permite estimar transiciones y modelar la dependencia serial. Siguiendo el planteamiento de la actividad, por ejemplo, la probabilidad de cambiar a la nota SI (B4) dado que actualmente suena la nota RE (D4) se fija en $P(B4 \mid D4) = 0.10$.
 #
 # Las probabilidades se definieron según la armonía funcional:
 # * Tónica (D4): Centro de gravedad tonal de máxima estabilidad.
@@ -248,7 +250,7 @@ plt.show()
 # Según las ecuaciones de Chapman Kolmogorov, la distribución tras $n$ transiciones se obtiene mediante potencias matriciales:
 # $$\pi^{(n)} = \pi^{(0)} \cdot P^n$$
 #
-# En el modelo de tres palabras presentado por Rodrigo Castellanos en clase ("él", "gato", "duerme"), la distribución evoluciona en cada paso y se estabiliza cerca de 20 transiciones. Esta distribución límite $\pi^*$ satisface:
+# En el modelo de lenguaje de tres palabras presentado por Rodrigo Castellanos en clase ("él", "gato", "duerme"), al partir de 100 textos iniciales distribuidos como [50, 40, 10], el vector evoluciona tras 2 pasos a [0.29, 0.33, 0.36] y se estabiliza cerca de 20 transiciones. Esta distribución límite $\pi^*$ satisface:
 # $$\pi^* \cdot P = \pi^* \quad \text{con} \quad \sum_{i=1}^m \pi_i = 1$$
 #
 # Este principio sustenta el algoritmo PageRank de Larry Page en Google, modelando la navegación web como una caminata aleatoria.
@@ -658,6 +660,8 @@ display(Audio(mix_audio, rate=DEFAULT_SAMPLE_RATE))
 # from act_2.visualizer import plot_melody_roll
 #
 # export_dir = Path("export")
+# if not export_dir.is_dir() and Path("../export").is_dir():
+#     export_dir = Path("../export")
 # export_dir.mkdir(parents=True, exist_ok=True)
 #
 # generator = MelodyGenerator(chain_notes)
