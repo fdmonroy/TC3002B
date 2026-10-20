@@ -1,0 +1,153 @@
+[project]
+name = "tc3002b"
+version = "0.1.0"
+description = "Coursework monorepo for TC3002B"
+readme = "README.md"
+authors = [
+    { name = "Daniel Monroy", email = "fernandodms04@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fitter>=1.8.1",
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "openpyxl>=3.1.0",
+    "pandas>=3.0.6",
+    "requests>=2.31.0",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "streamlit>=1.30.0",
+    "tabulate>=0.10.0",
+    "tensorflow>=2.15.0",
+]
+
+[project.optional-dependencies]
+m2-ai-linear-regression = [
+    "numpy>=1.26.0",
+    "requests>=2.31.0",
+    "tensorflow>=2.15.0",
+]
+m2-ai-neural-network = [
+    "numpy>=1.26.0",
+    "openpyxl>=3.1.0",
+    "pandas>=2.0.0",
+    "streamlit>=1.30.0",
+]
+m2-ai = [
+    "numpy>=1.26.0",
+    "openpyxl>=3.1.0",
+    "pandas>=2.0.0",
+    "requests>=2.31.0",
+    "streamlit>=1.30.0",
+    "tensorflow>=2.15.0",
+]
+m4-quant-act-1 = [
+    "fitter>=1.8.1",
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+m4-quant-act-2 = [
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+m4-quant = [
+    "fitter>=1.8.1",
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+
+[dependency-groups]
+m2-ai-linear-regression = [
+    "numpy>=1.26.0",
+    "requests>=2.31.0",
+    "tensorflow>=2.15.0",
+]
+m2-ai-neural-network = [
+    "numpy>=1.26.0",
+    "openpyxl>=3.1.0",
+    "pandas>=2.0.0",
+    "streamlit>=1.30.0",
+]
+m2-ai = [
+    "numpy>=1.26.0",
+    "openpyxl>=3.1.0",
+    "pandas>=2.0.0",
+    "requests>=2.31.0",
+    "streamlit>=1.30.0",
+    "tensorflow>=2.15.0",
+]
+m4-quant-act-1 = [
+    "fitter>=1.8.1",
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+m4-quant-act-2 = [
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+m4-quant = [
+    "fitter>=1.8.1",
+    "great-tables>=1.0.0",
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "jupytext>=1.19.6",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scipy>=1.18.1",
+    "seaborn>=0.13.2",
+    "tabulate>=0.10.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "m4-quant/act 1",
+    "m4-quant/act 2",
+]
+
+[tool.uv]
+package = false
