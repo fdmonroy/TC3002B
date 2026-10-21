@@ -1,6 +1,6 @@
 # Red Neuronal desde Cero (Clasificacion GPS de Ciudades)
 
-Implementacion didactica de una red neuronal profunda desarrollada desde cero con NumPy (sin frameworks de caja negra) para resolver un problema de clasificacion binaria sobre coordenadas geograficas (latitud y longitud).
+Implementacion de una red neuronal profunda desarrollada desde cero con NumPy para resolver un problema de clasificacion binaria sobre coordenadas geograficas (latitud y longitud).
 
 ## Estructura del Directorio
 
@@ -8,10 +8,9 @@ Implementacion didactica de una red neuronal profunda desarrollada desde cero co
 cw-neural-network-scratch/
 ├── .gitignore                  # Exclusion de entorno virtual y archivos temporales
 ├── dataset.py                  # Generador de coordenadas GPS y aplicacion Streamlit
-├── neural_network_numpy.py     # Algoritmo de red neuronal, entrenamiento y exportacion
-├── README.md                   # Documentacion tecnica e instrucciones de ejecucion
-├── template_red_neuronal.xlsx  # Plantilla de validacion matematica
-├── validation_weights.xlsx     # Hoja Excel generada con pesos y evaluacion de 20 puntos
+├── neural_network_numpy.py         # Algoritmo de red neuronal y evaluacion
+├── neural_network_numpy_excel.xlsx # Hoja de calculo con validacion matematica y pesos de la red
+├── README.md                       # Documentacion tecnica e instrucciones de ejecucion
 └── data/
     ├── city1.csv               # Coordenadas de Ciudad 1 (Buenos Aires, etiqueta 0)
     └── city2.csv               # Coordenadas de Ciudad 2 (El Cairo, etiqueta 1)
@@ -47,13 +46,13 @@ La red implementa una topologia perceptron multicapa de 3 capas densas:
 
 ### 1. Generar Datasets
 
-Genera 150 puntos sinteticos por ciudad (300 puntos en total) via linea de comandos:
+Generacion de 150 puntos sinteticos por ciudad (300 puntos en total):
 
 ```bash
 python3 dataset.py --cli --points 150
 ```
 
-Para visualizar las coordenadas interactivamente en un mapa web:
+Visualizacion interactiva en servidor web Streamlit:
 
 ```bash
 streamlit run dataset.py
@@ -61,15 +60,16 @@ streamlit run dataset.py
 
 ### 2. Entrenar y Validar la Red
 
-Ejecuta el entrenamiento de la red por 500 epocas, imprime las predicciones sobre 20 puntos de prueba (10 de cada ciudad) y actualiza la hoja de validacion Excel:
+Entrenamiento de la red por 500 epocas y evaluacion de predicciones sobre 20 puntos de prueba (10 de cada ciudad):
 
 ```bash
 python3 neural_network_numpy.py
 ```
 
-### 3. Validacion en Excel
+### 3. Validacion en Excel y Google Sheets
 
-El archivo `validation_weights.xlsx` contiene la evaluacion matematica exacta en celdas de Excel:
+El archivo `neural_network_numpy_excel.xlsx` y la version equivalente en la nube contienen la evaluacion matematica exacta del modelo:
+- Hoja de calculo en Google Sheets: [neural_network_numpy_excel](https://docs.google.com/spreadsheets/d/1_82kXk-xCmTrAYq5ORDJlUOYkPWTuX74NltGPSz33pY/edit?usp=sharing)
 - Renglones 3 a 12: 10 coordenadas de prueba de Ciudad 1 (salida aproximada a 0.0).
 - Renglones 13 a 22: 10 coordenadas de prueba de Ciudad 2 (salida aproximada a 1.0).
 - Celdas `E3:H4` y `E8:H8`: Pesos $W_1$ y sesgos $b_1$.
