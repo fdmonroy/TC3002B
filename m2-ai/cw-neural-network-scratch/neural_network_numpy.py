@@ -1,189 +1,299 @@
+# excel demo
+# https://docs.google.com/spreadsheets/d/1GABf2jSFXd5rvPxJSTVoMK_ooPmykxpk1KZDDZ9_Dbg/edit?usp=sharing
+# validation sheet
+# https://docs.google.com/spreadsheets/d/1rHpZ68F_UkG3CMKPJ43tV8r6wItKA_nJw_6Na29LRv8/edit?usp=sharing
+
 import os
-import openpyxl
+from scipy import stats
 import numpy as np
+import math
+import matplotlib.pyplot as plt
+import random
 import pandas as pd
+import openpyxl
 
-# Activation functions and their derivatives
-def sigmoid(x: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0)))
+sigmoid = (
+  lambda x:1 / (1 + np.exp(-x)),
+  lambda x:x * (1 - x)
+  )
 
-def d_sigmoid(a: np.ndarray) -> np.ndarray:
-    return a * (1.0 - a)
+def derivada_relu(x):
+  x[x<=0] = 0
+  x[x>0] = 1
+  return x
 
-def relu(x: np.ndarray) -> np.ndarray:
-    return np.maximum(0.0, x)
+relu = (
+  lambda x: x * (x > 0),
+  lambda x:derivada_relu(x)
+  )
 
-def d_relu(a: np.ndarray) -> np.ndarray:
-    return (a > 0.0).astype(np.float64)
+def circulo(num_datos = 100,R = 1, minimo = 0,maximo= 1):
+  pi = math.pi
+  r = R * np.sqrt(stats.truncnorm.rvs(minimo, maximo, size= num_datos)) * 10
+  theta = stats.truncnorm.rvs(minimo, maximo, size= num_datos) * 2 * pi *10
+  #print(len(r))
+  #print(len(theta))
+  x = np.cos(theta) * r
+  y = np.sin(theta) * r
 
-def mse(pred: np.ndarray, true: np.ndarray) -> tuple[float, np.ndarray]:
-    loss = float(np.mean((pred - true) ** 2))
-    grad = pred - true
-    return loss, grad
+  y = y.reshape((num_datos,1))
+  x = x.reshape((num_datos,1))
 
-class Layer:
-    def __init__(self, in_features: int, out_features: int, is_output: bool = False):
-        self.in_features = in_features
-        self.out_features = out_features
-        self.is_output = is_output
-        # Scaled uniform initialization
-        scale = 0.2 if is_output else 0.05
-        self.W = np.random.uniform(-scale, scale, (in_features, out_features))
-        self.b = np.zeros((1, out_features))
+  #Vamos a reducir el numero de elementos para que no cause un Overflow
+  x = np.round(x,3)
+  y = np.round(y,3)
 
-class NeuralNetwork:
-    def __init__(self, architecture: list[int] = [2, 4, 8, 1]):
-        self.layers = []
-        for i in range(len(architecture) - 1):
-            is_out = (i == len(architecture) - 2)
-            self.layers.append(Layer(architecture[i], architecture[i + 1], is_output=is_out))
+  df = np.column_stack([x,y])
+  #print(df)
+  return(df)
 
-    def forward(self, X: np.ndarray) -> list[np.ndarray]:
-        activations = [X]
-        for i, layer in enumerate(self.layers):
-            z = activations[-1] @ layer.W + layer.b
-            a = sigmoid(z) if layer.is_output else relu(z)
-            activations.append(a)
-        return activations
+#print(len(X))
+#print(len(Y))
+# Numero de neuronas en cada capa.
+# El primer valor es el numero de columnas de la capa de entrada.
+#neuronas = [2,4,8,1]
 
-    def train(self, X: np.ndarray, Y: np.ndarray, epochs: int = 500, lr: float = 0.001) -> list[float]:
-        history = []
-        for epoch in range(1, epochs + 1):
-            activations = self.forward(X)
-            output = activations[-1]
-            loss, d_loss = mse(output, Y)
-            history.append(loss)
+# Funciones de activacion usadas en cada capa.
+#funciones_activacion = [relu,relu, sigmoid]
 
-            # Backpropagation
-            delta = d_loss * d_sigmoid(output)
-            for i in reversed(range(len(self.layers))):
-                layer = self.layers[i]
-                prev_a = activations[i]
+#red_neuronal = []
 
-                grad_W = prev_a.T @ delta
-                grad_b = np.sum(delta, axis=0, keepdims=True)
+#for paso in range(len(neuronas)-1):
+#  x = capa(neuronas[paso],neuronas[paso+1],funciones_activacion[paso])
+#  print(neuronas[paso],neuronas[paso+1],funciones_activacion[paso])
 
-                if i > 0:
-                    prev_layer = self.layers[i - 1]
-                    delta = (delta @ layer.W.T) * d_relu(activations[i])
+#  red_neuronal.append(x)
+#  print(x)
 
-                layer.W -= grad_W * lr
-                layer.b -= grad_b * lr
+#print(red_neuronal)
 
-            if epoch % 100 == 0 or epoch == epochs:
-                print(f"Epoch {epoch:4d}/{epochs} - Loss (MSE): {loss:.6f}")
 
-        return history
+def mse(Ypredich, Yreal):
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        return self.forward(X)[-1]
+  # Calculamos el error
+  #print(Ypredich)
+  #print(Yreal)
+  x = (np.array(Ypredich) - np.array(Yreal)) ** 2
+  #print(x)
+  x = np.mean(x)
+  #print(x)
+  # Calculamos la derivada de la funcion
+  y = np.array(Ypredich) - np.array(Yreal)
+  return (x,y)
 
-def load_data(base_dir: str) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Load City 1 and City 2 datasets and partition into train and validation sets."""
-    c1_path = os.path.join(base_dir, "data", "city1.csv")
-    c2_path = os.path.join(base_dir, "data", "city2.csv")
 
-    if not os.path.exists(c1_path) or not os.path.exists(c2_path):
-        from dataset import save_datasets
-        print("Datasets not found. Generating default city coordinates...")
-        save_datasets(output_dir=os.path.join(base_dir, "data"), num_points=300)
+def entrenamiento(epoch, X,Y, red_neuronal, lr = 0.01):
 
-    df1 = pd.read_csv(c1_path)
-    df2 = pd.read_csv(c2_path)
+  # Output guardara el resultado de cada capa
+  # En la capa 1, el resultado es el valor de entrada
+  output = [X]
+  for num_capa in range(len(red_neuronal)):
+    z = output[-1] @ red_neuronal[num_capa].W + red_neuronal[num_capa].b
+    a = red_neuronal[num_capa].funcion_act[0](z)
+    #print(epoch)
+    #if (epoch==0) or (epoch==-999):
+      #print(epoch)
+      #print(red_neuronal[num_capa].funcion_act[0]( np.array([-1, 1]) ))
+      #print(X, X.shape)
+      #print('w', red_neuronal[num_capa].W.shape)
+      #print(red_neuronal[num_capa].W)
+      #print('b', red_neuronal[num_capa].b.shape)
+      #print(red_neuronal[num_capa].b)
 
-    # 10 validation points from each city (20 total)
-    val1 = df1.iloc[:10][["lat", "lon"]].values
-    val2 = df2.iloc[:10][["lat", "lon"]].values
-    X_val = np.vstack([val1, val2])
-    Y_val = np.vstack([np.zeros((10, 1)), np.ones((10, 1))])
+      #print('z', z.shape)
+      #print(z)
+      #print('act ', num_capa)
+      #print(a)
+    # Incluimos el resultado de la capa a output
+    output.append(a)
 
-    # Remaining points for training
-    train1 = df1.iloc[10:][["lat", "lon"]].values
-    train2 = df2.iloc[10:][["lat", "lon"]].values
-    X_train = np.vstack([train1, train2])
-    Y_train = np.vstack([np.zeros((len(train1), 1)), np.ones((len(train2), 1))])
+  # Backpropagation
 
-    return X_train, Y_train, X_val, Y_val
+  back = list(range(len(output)-1))
+  back.reverse()
 
-def update_excel_validation(base_dir: str, nn: NeuralNetwork, X_val: np.ndarray, Y_val: np.ndarray):
-    """Populate template Excel validation sheet with test points and trained weights."""
-    template_path = os.path.join(base_dir, "template_red_neuronal.xlsx")
-    output_path = os.path.join(base_dir, "validation_weights.xlsx")
+  # Guardaremos el error de la capa en delta
+  delta = []
 
-    if not os.path.exists(template_path):
-        print(f"Template {template_path} not found. Skipping Excel export.")
-        return
+  for capa in back:
+    # Backprop #delta
 
-    wb = openpyxl.load_workbook(template_path)
-    ws = wb["tensorflow validation N=20"]
+    a = output[capa+1]
+    #if (epoch==0) or (epoch==-999):
+    #  print('activation', a)
 
-    # Write 20 validation coordinates (Rows 3 to 22, Columns B and C)
-    for i in range(20):
-        row = 3 + i
-        ws.cell(row=row, column=2, value=float(X_val[i, 0]))  # Latitud (Col B)
-        ws.cell(row=row, column=3, value=float(X_val[i, 1]))  # Longitud (Col C)
-        ws.cell(row=row, column=53, value=float(Y_val[i, 0])) # Target label (Col BA)
+    if capa == back[0]:
+      x = mse(a,Y)[1] * red_neuronal[capa].funcion_act[1](a)
+      delta.append(x)
+      if (epoch==0) and (epoch==-999):
+        print('mse 0', x)
+        #print('mse 01', mse(a,Y)[1] )
+        #print('mse 02', red_neuronal[capa].funcion_act[1](a) )
+        #print('mse 02', red_neuronal[capa].funcion_act[1](np.array([-2, -1, 0, 1, 2])) )
 
-    # Layer 1: W1 (2x4) in E3:H4, b1 (1x4) in E8:H8
-    W1 = nn.layers[0].W
-    b1 = nn.layers[0].b
-    for r in range(2):
-        for c in range(4):
-            ws.cell(row=3 + r, column=5 + c, value=float(W1[r, c]))
+    else:
+      if (epoch==0) and (capa == back[1]) and (epoch==-999):
+        print('function a ', a)
+        print('delta', delta[-1])
+        print('W_temp', W_temp)
+
+      x = delta[-1] @ W_temp * red_neuronal[capa].funcion_act[1](a)
+      if (epoch==0) and (capa == back[1]) and (epoch==-999):
+        print('x ', x)
+
+      delta.append(x)
+
+ #       print('mse 2', x)
+
+    W_temp = red_neuronal[capa].W.transpose()
+    #if (epoch==0) or (epoch==-999):
+    #  print('W_temp', capa, red_neuronal[capa].W, W_temp)
+    # Gradient Descent #
+    red_neuronal[capa].b = red_neuronal[capa].b - np.mean(delta[-1], axis = 0, keepdims = True) * lr
+    red_neuronal[capa].W = red_neuronal[capa].W - output[capa].transpose() @ delta[-1] * lr
+    #if (epoch==0) and (capa==0):
+    #  print('output 0', output[capa].transpose())
+    #  print('delta  0', delta[-1])
+
+    #print(red_neuronal[capa].W)
+    #print('b', capa)
+    #print(red_neuronal[capa].b)
+ 
+  return output[-1]
+
+class capa():
+  def __init__(self, n_neuronas_capa_anterior, n_neuronas, funcion_act):
+    self.funcion_act = funcion_act
+    self.b  = np.round(stats.truncnorm.rvs(-1, 1, loc=0, scale=1, size= n_neuronas).reshape(1,n_neuronas),3)
+    self.W  = np.round(stats.truncnorm.rvs(-1, 1, loc=0, scale=1, size= n_neuronas * n_neuronas_capa_anterior).reshape(n_neuronas_capa_anterior,n_neuronas),3)
+    #self.b  = np.full((1,n_neuronas), 0.25).reshape(1,n_neuronas)
+    #self.W  = np.full((1,n_neuronas * n_neuronas_capa_anterior), 0.75).reshape(n_neuronas_capa_anterior,n_neuronas)
+
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+c1_path = os.path.join(base_dir, "data", "city1.csv")
+c2_path = os.path.join(base_dir, "data", "city2.csv")
+
+if not os.path.exists(c1_path) or not os.path.exists(c2_path):
+  from dataset import save_datasets
+  save_datasets(output_dir=os.path.join(base_dir, "data"), num_points=150)
+
+N = 150
+
+# datos_1 = circulo(num_datos = N, R = 2)
+# datos_2 = circulo(num_datos = N, R = 0.5)
+datos_1 = pd.read_csv(c1_path)[["lat", "lon"]].values[:N]
+datos_2 = pd.read_csv(c2_path)[["lat", "lon"]].values[:N]
+X = np.concatenate([datos_1,datos_2])
+X = np.round(X,3)
+#X = np.array([[ -2.848,   5.975],
+# [-10.429,  -8.024],
+# [ -1.284,   2.872],
+# [  4.758,   5.955],
+# [ -3.938,  -5.78 ],
+# [  8.525,  17.866],
+# [-13.715,   4.789],
+# [ -3.19,   13.309],
+# [  3.227,  18.344],
+# [ -5.014, -17.507],
+# [  0.491,   1.897],
+# [ -0.54,    1.12 ],
+# [ -2.032,   1.092],
+# [ -1.476,  -1.606],
+# [ -0.084,   3.386],
+# [ -1.618,   1.16 ],
+# [  2.238,  -1.671],
+# [ -2.102,   1.924],
+# [ -1.059,   4.297],
+# [  2.642,   2.981]])
+
+Y = [0] * N + [1] * N
+Y = np.array(Y).reshape(len(Y),1)
+
+np.random.seed(3)
+neuronas = [2,4,8,1]
+funciones_activacion = [relu,relu, sigmoid]
+red_neuronal = []
+
+for paso in list(range(len(neuronas)-1)):
+  x = capa(neuronas[paso],neuronas[paso+1],funciones_activacion[paso])
+  red_neuronal.append(x)
+  #print('w')
+  #print(neuronas[paso])
+  #print(neuronas[paso+1])
+  
+  #print(x.W)
+  #print('b')
+  #print(x.b)
+  #print('---')
+error = []
+predicciones = []
+
+for epoch in range(0, 500):
+  ronda = entrenamiento(epoch, X = X ,Y = Y ,red_neuronal = red_neuronal, lr = 0.001)
+  #print('-----')
+  #print(ronda)
+  #print(Y)
+  predicciones.append(ronda)
+  temp = mse(np.round(predicciones[-1]),Y)[0]
+  #print(temp)
+  #print('-----')
+  error.append(temp)
+
+print('===final Y1 (first 10) =====')
+print(predicciones[-1][0:10])
+print('===final Y2 (first 10) =====')
+print(predicciones[-1][N:N+10])
+print('===final MSE =====')
+print(error[-1])
+
+print('=== Layer 0 (2 -> 4) W and b ===')
+print('W0:\n', red_neuronal[0].W)
+print('b0:\n', red_neuronal[0].b)
+
+print('=== Layer 1 (4 -> 8) W and b ===')
+print('W1:\n', red_neuronal[1].W)
+print('b1:\n', red_neuronal[1].b)
+
+print('=== Layer 2 (8 -> 1) W and b ===')
+print('W2:\n', red_neuronal[2].W)
+print('b2:\n', red_neuronal[2].b)
+
+# Update Excel validation sheet (only loading 20 coordinates and W, b per layer)
+template_path = os.path.join(base_dir, "template_red_neuronal.xlsx")
+output_path = os.path.join(base_dir, "validation_weights.xlsx")
+if os.path.exists(template_path):
+  wb = openpyxl.load_workbook(template_path)
+  ws = wb["tensorflow validation N=20"]
+
+  X_val = np.vstack([datos_1[:10], datos_2[:10]])
+  for i in range(20):
+    row = 3 + i
+    ws.cell(row=row, column=2, value=float(X_val[i, 0]))
+    ws.cell(row=row, column=3, value=float(X_val[i, 1]))
+
+  # Layer 0 (2 -> 4): W in E3:H4, b in E8:H8
+  for r in range(2):
     for c in range(4):
-        ws.cell(row=8, column=5 + c, value=float(b1[0, c]))
+      ws.cell(row=3 + r, column=5 + c, value=float(red_neuronal[0].W[r, c]))
+  for c in range(4):
+    ws.cell(row=8, column=5 + c, value=float(red_neuronal[0].b[0, c]))
 
-    # Layer 2: W2 (4x8) in T3:AA6, b2 (1x8) in T9:AA9
-    W2 = nn.layers[1].W
-    b2 = nn.layers[1].b
-    for r in range(4):
-        for c in range(8):
-            ws.cell(row=3 + r, column=20 + c, value=float(W2[r, c]))
+  # Layer 1 (4 -> 8): W in T3:AA6, b in T9:AA9
+  for r in range(4):
     for c in range(8):
-        ws.cell(row=9, column=20 + c, value=float(b2[0, c]))
+      ws.cell(row=3 + r, column=20 + c, value=float(red_neuronal[1].W[r, c]))
+  for c in range(8):
+    ws.cell(row=9, column=20 + c, value=float(red_neuronal[1].b[0, c]))
 
-    # Layer 3: W3 (8x1) in AU3:AU10, b3 (1x1) in AU13
-    W3 = nn.layers[2].W
-    b3 = nn.layers[2].b
-    for r in range(8):
-        ws.cell(row=3 + r, column=47, value=float(W3[r, 0]))
-    ws.cell(row=13, column=47, value=float(b3[0, 0]))
+  # Layer 2 (8 -> 1): W in AU3:AU10, b in AU13
+  for r in range(8):
+    ws.cell(row=3 + r, column=47, value=float(red_neuronal[2].W[r, 0]))
+  ws.cell(row=13, column=47, value=float(red_neuronal[2].b[0, 0]))
 
-    wb.save(output_path)
-    print(f"Validation sheet saved to: {output_path}")
+  wb.save(output_path)
+  print(f"Saved validation sheet to {output_path}")
 
-def main():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    np.random.seed(42)
-
-    print("Loading city datasets...")
-    X_train, Y_train, X_val, Y_val = load_data(base_dir)
-    print(f"Training samples: {len(X_train)}, Validation samples: {len(X_val)}")
-
-    print("\nInitializing Neural Network [2, 4, 8, 1] (ReLU, ReLU, Sigmoid)...")
-    nn = NeuralNetwork(architecture=[2, 4, 8, 1])
-
-    print("Training network (500 epochs, lr=0.001)...")
-    nn.train(X_train, Y_train, epochs=500, lr=0.001)
-
-    print("\n--- Validation on 20 GPS Points ---")
-    predictions = nn.predict(X_val)
-
-    val_df = pd.DataFrame({
-        "Lat": X_val[:, 0],
-        "Lon": X_val[:, 1],
-        "City": ["City 1 (Buenos Aires)"] * 10 + ["City 2 (Cairo)"] * 10,
-        "Target": Y_val.flatten().astype(int),
-        "Predicted": predictions.flatten().round(4),
-        "Class": (predictions.flatten() >= 0.5).astype(int)
-    })
-    print(val_df.to_string(index=False))
-
-    acc = np.mean(val_df["Target"] == val_df["Class"]) * 100.0
-    print(f"\nValidation Accuracy: {acc:.1f}%")
-
-    # Export to Excel sheet
-    update_excel_validation(base_dir, nn, X_val, Y_val)
-
-if __name__ == "__main__":
-    main()
+#epoch = list(range(0,1))
+#plt.cla()
+#plt.plot(epoch, error)

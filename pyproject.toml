@@ -32,16 +32,20 @@ m2-ai-linear-regression = [
     "tensorflow>=2.15.0",
 ]
 m2-ai-neural-network = [
+    "matplotlib>=3.11.2",
     "numpy>=1.26.0",
     "openpyxl>=3.1.0",
     "pandas>=2.0.0",
+    "scipy>=1.18.1",
     "streamlit>=1.30.0",
 ]
 m2-ai = [
+    "matplotlib>=3.11.2",
     "numpy>=1.26.0",
     "openpyxl>=3.1.0",
     "pandas>=2.0.0",
     "requests>=2.31.0",
+    "scipy>=1.18.1",
     "streamlit>=1.30.0",
     "tensorflow>=2.15.0",
 ]
@@ -91,16 +95,20 @@ m2-ai-linear-regression = [
     "tensorflow>=2.15.0",
 ]
 m2-ai-neural-network = [
+    "matplotlib>=3.11.2",
     "numpy>=1.26.0",
     "openpyxl>=3.1.0",
     "pandas>=2.0.0",
+    "scipy>=1.18.1",
     "streamlit>=1.30.0",
 ]
 m2-ai = [
+    "matplotlib>=3.11.2",
     "numpy>=1.26.0",
     "openpyxl>=3.1.0",
     "pandas>=2.0.0",
     "requests>=2.31.0",
+    "scipy>=1.18.1",
     "streamlit>=1.30.0",
     "tensorflow>=2.15.0",
 ]

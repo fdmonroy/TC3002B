@@ -41,16 +41,16 @@ La red implementa una topologia perceptron multicapa de 3 capas densas:
    $$\delta_1 = (\delta_2 W_2^T) \odot \mathbb{I}(A_1 > 0)$$
 
 4. Descenso de Gradiente:
-   $$W_l \leftarrow W_l - \alpha (A_{l-1}^T \delta_l), \quad b_l \leftarrow b_l - \alpha \sum \delta_l$$
+   $$W_l \leftarrow W_l - \alpha (A_{l-1}^T \delta_l), \quad b_l \leftarrow b_l - \alpha \frac{1}{N}\sum \delta_l$$
 
 ## Instrucciones de Uso
 
 ### 1. Generar Datasets
 
-Genera 300 puntos sinteticos por ciudad via linea de comandos:
+Genera 150 puntos sinteticos por ciudad (300 puntos en total) via linea de comandos:
 
 ```bash
-python3 dataset.py --cli --points 300
+python3 dataset.py --cli --points 150
 ```
 
 Para visualizar las coordenadas interactivamente en un mapa web:
