@@ -235,12 +235,12 @@ def compare_empirical_vs_theoretical(result: SimulationResult) -> pd.DataFrame:
     emp_p0 = result.state_occupancy.get(0, 0.0)
 
     metrics_spec = [
-        ("Factor de utilización (ρ)", theo["rho_per_server"], result.rho_empirical),
-        ("Probabilidad sistema vacío (P0)", theo["p0"], emp_p0),
-        ("Clientes en el sistema (L)", theo["l_system"], result.l_system_empirical),
-        ("Clientes en la fila (Lq)", theo["l_queue"], result.l_queue_empirical),
-        ("Tiempo total en sistema W (min)", theo["w_system_mins"], result.w_system_mins_empirical),
-        ("Tiempo de espera en fila Wq (min)", theo["w_queue_mins"], result.w_queue_mins_empirical),
+        ("Utilización (rho)", theo["rho_per_server"], result.rho_empirical),
+        ("Sistema vacío (P0)", theo["p0"], emp_p0),
+        ("Clientes en sistema (L)", theo["l_system"], result.l_system_empirical),
+        ("Clientes en fila (Lq)", theo["l_queue"], result.l_queue_empirical),
+        ("Tiempo total W (min)", theo["w_system_mins"], result.w_system_mins_empirical),
+        ("Espera en fila Wq (min)", theo["w_queue_mins"], result.w_queue_mins_empirical),
     ]
 
     rows = []
@@ -249,9 +249,9 @@ def compare_empirical_vs_theoretical(result: SimulationResult) -> pd.DataFrame:
         rows.append(
             {
                 "Métrica": label,
-                "Valor teórico": float(t_val),
-                "Simulación SimPy": float(e_val),
-                "Error relativo (%)": float(rel_err),
+                "Teórico": float(t_val),
+                "SimPy": float(e_val),
+                "Error (%)": float(rel_err),
             }
         )
     return pd.DataFrame(rows)
@@ -280,14 +280,13 @@ def run_rho_sweep_simulation(
         )
         rows.append(
             {
-                "Utilización ρ": theo.rho,
-                "Tasa λ (/h)": theo.arrival_rate,
-                "Clientes en fila Lq": theo.l_queue,
-                "Clientes en sistema L": theo.l_system,
-                "Wq teórico (min)": theo.w_queue_mins,
-                "W teórico (min)": theo.w_system_mins,
-                "W SimPy (min)": sim_res.w_system_mins_empirical,
-                "Wq SimPy (min)": sim_res.w_queue_mins_empirical,
+                "rho": theo.rho,
+                "Tasa": theo.arrival_rate,
+                "Lq": theo.l_queue,
+                "L": theo.l_system,
+                "Wq teo": theo.w_queue_mins,
+                "W teo": theo.w_system_mins,
+                "W SimPy": sim_res.w_system_mins_empirical,
             }
         )
     return pd.DataFrame(rows)

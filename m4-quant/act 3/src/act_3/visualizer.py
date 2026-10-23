@@ -207,13 +207,17 @@ def plot_congestion_explosion(
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.2))
 
     ax0 = axes[0]
+    rho_col = "rho" if "rho" in df_sweep.columns else "Utilización ρ"
+    lam_col = "Tasa" if "Tasa" in df_sweep.columns else "Tasa λ (/h)"
+    w_theo_col = "W teo" if "W teo" in df_sweep.columns else "W teórico (min)"
+    w_sim_col = "W SimPy" if "W SimPy" in df_sweep.columns else "W SimPy (min)"
     labels = [
         f"ρ={r:.2f}\n(λ={lam:g}/h)"
-        for r, lam in zip(df_sweep["Utilización ρ"], df_sweep["Tasa λ (/h)"])
+        for r, lam in zip(df_sweep[rho_col], df_sweep[lam_col])
     ]
     x_pos = np.arange(len(labels))
-    w_theo = df_sweep["W teórico (min)"].values
-    w_sim = df_sweep["W SimPy (min)"].values
+    w_theo = df_sweep[w_theo_col].values
+    w_sim = df_sweep[w_sim_col].values
 
     bars = ax0.bar(
         x_pos - 0.18,
@@ -266,8 +270,8 @@ def plot_congestion_explosion(
     ax1.plot(rho_grid, w_curve, color="#2B6CB0", lw=2.0, label="W(ρ) total teórico")
     ax1.plot(rho_grid, wq_curve, color="#319795", lw=1.8, linestyle="--", label="Wq(ρ) en fila teórico")
     ax1.scatter(
-        df_sweep["Utilización ρ"],
-        df_sweep["W SimPy (min)"],
+        df_sweep[rho_col],
+        df_sweep[w_sim_col],
         color="#DD6B20",
         s=45,
         zorder=4,
@@ -305,10 +309,17 @@ def plot_capacity_comparison(
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.2))
 
     ax0 = axes[0]
-    configs = df_capacity["Configuración"].tolist()
+    cfg_col = "Modelo" if "Modelo" in df_capacity.columns else "Configuración"
+    configs = df_capacity[cfg_col].tolist()
     x_idx = np.arange(len(configs))
-    wq_vals = df_capacity["Espera en fila Wq (min)"].values
-    util_vals = df_capacity["Utilización por servidor (%)"].values
+    wq_col = "Wq teo" if "Wq teo" in df_capacity.columns else "Espera en fila Wq (min)"
+    util_col = (
+        "Uso (%)"
+        if "Uso (%)" in df_capacity.columns
+        else "Utilización por servidor (%)"
+    )
+    wq_vals = df_capacity[wq_col].values
+    util_vals = df_capacity[util_col].values
 
     b1 = ax0.bar(
         x_idx - 0.18,
