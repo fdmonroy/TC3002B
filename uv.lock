@@ -17,6 +17,7 @@ resolution-markers = [
 members = [
     "act-1",
     "act-2",
+    "act-3",
     "tc3002b",
 ]
 
@@ -90,6 +91,39 @@ requires-dist = [
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "scipy", specifier = ">=1.18.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "tabulate", specifier = ">=0.10.0" },
+]
+
+[[package]]
+name = "act-3"
+version = "0.1.0"
+source = { editable = "m4-quant/act 3" }
+dependencies = [
+    { name = "great-tables" },
+    { name = "ipykernel" },
+    { name = "jupyter" },
+    { name = "jupytext" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scipy" },
+    { name = "seaborn" },
+    { name = "simpy" },
+    { name = "tabulate" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "great-tables", specifier = ">=1.0.0" },
+    { name = "ipykernel", specifier = ">=7.4.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "jupytext", specifier = ">=1.19.6" },
+    { name = "matplotlib", specifier = ">=3.11.2" },
+    { name = "numpy", specifier = ">=2.5.3" },
+    { name = "pandas", specifier = ">=3.0.6" },
+    { name = "scipy", specifier = ">=1.18.1" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "simpy", specifier = ">=4.1.1" },
     { name = "tabulate", specifier = ">=0.10.0" },
 ]
 
@@ -2750,6 +2784,15 @@ wheels = [
 ]
 
 [[package]]
+name = "simpy"
+version = "4.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4a/38/fb393d1a5c2f35b65609e8d3c39d1508ada6a767c7e624ffa16ed3e84ffd/simpy-4.1.2.tar.gz", hash = "sha256:76ef36b71e0436ba94e55febc001c78879e493a323f045bbcfbb0b216e9b1fbc", size = 410129, upload-time = "2026-05-24T04:37:12.834Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/ed/07a1e054922c16b2c18ca3598771936c344d52337b8aaf0f1e3ed8b223dc/simpy-4.1.2-py3-none-any.whl", hash = "sha256:43071f84b6512c9b4fcb33ef057f240ccb1d1f3b263f9b4f9229d072e310b372", size = 27375, upload-time = "2026-05-24T04:37:11.74Z" },
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2848,6 +2891,7 @@ dependencies = [
     { name = "requests" },
     { name = "scipy" },
     { name = "seaborn" },
+    { name = "simpy" },
     { name = "streamlit" },
     { name = "tabulate" },
     { name = "tensorflow" },
@@ -2888,6 +2932,7 @@ m4-quant = [
     { name = "pandas" },
     { name = "scipy" },
     { name = "seaborn" },
+    { name = "simpy" },
     { name = "tabulate" },
 ]
 m4-quant-act-1 = [
@@ -2913,6 +2958,19 @@ m4-quant-act-2 = [
     { name = "pandas" },
     { name = "scipy" },
     { name = "seaborn" },
+    { name = "tabulate" },
+]
+m4-quant-act-3 = [
+    { name = "great-tables" },
+    { name = "ipykernel" },
+    { name = "jupyter" },
+    { name = "jupytext" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scipy" },
+    { name = "seaborn" },
+    { name = "simpy" },
     { name = "tabulate" },
 ]
 
@@ -2951,6 +3009,7 @@ m4-quant = [
     { name = "pandas" },
     { name = "scipy" },
     { name = "seaborn" },
+    { name = "simpy" },
     { name = "tabulate" },
 ]
 m4-quant-act-1 = [
@@ -2978,6 +3037,19 @@ m4-quant-act-2 = [
     { name = "seaborn" },
     { name = "tabulate" },
 ]
+m4-quant-act-3 = [
+    { name = "great-tables" },
+    { name = "ipykernel" },
+    { name = "jupyter" },
+    { name = "jupytext" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scipy" },
+    { name = "seaborn" },
+    { name = "simpy" },
+    { name = "tabulate" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -2988,24 +3060,29 @@ requires-dist = [
     { name = "great-tables", marker = "extra == 'm4-quant'", specifier = ">=1.0.0" },
     { name = "great-tables", marker = "extra == 'm4-quant-act-1'", specifier = ">=1.0.0" },
     { name = "great-tables", marker = "extra == 'm4-quant-act-2'", specifier = ">=1.0.0" },
+    { name = "great-tables", marker = "extra == 'm4-quant-act-3'", specifier = ">=1.0.0" },
     { name = "ipykernel", specifier = ">=7.4.0" },
     { name = "ipykernel", marker = "extra == 'm4-quant'", specifier = ">=7.4.0" },
     { name = "ipykernel", marker = "extra == 'm4-quant-act-1'", specifier = ">=7.4.0" },
     { name = "ipykernel", marker = "extra == 'm4-quant-act-2'", specifier = ">=7.4.0" },
+    { name = "ipykernel", marker = "extra == 'm4-quant-act-3'", specifier = ">=7.4.0" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "jupyter", marker = "extra == 'm4-quant'", specifier = ">=1.1.1" },
     { name = "jupyter", marker = "extra == 'm4-quant-act-1'", specifier = ">=1.1.1" },
     { name = "jupyter", marker = "extra == 'm4-quant-act-2'", specifier = ">=1.1.1" },
+    { name = "jupyter", marker = "extra == 'm4-quant-act-3'", specifier = ">=1.1.1" },
     { name = "jupytext", specifier = ">=1.19.6" },
     { name = "jupytext", marker = "extra == 'm4-quant'", specifier = ">=1.19.6" },
     { name = "jupytext", marker = "extra == 'm4-quant-act-1'", specifier = ">=1.19.6" },
     { name = "jupytext", marker = "extra == 'm4-quant-act-2'", specifier = ">=1.19.6" },
+    { name = "jupytext", marker = "extra == 'm4-quant-act-3'", specifier = ">=1.19.6" },
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "matplotlib", marker = "extra == 'm2-ai'", specifier = ">=3.11.2" },
     { name = "matplotlib", marker = "extra == 'm2-ai-neural-network'", specifier = ">=3.11.2" },
     { name = "matplotlib", marker = "extra == 'm4-quant'", specifier = ">=3.11.2" },
     { name = "matplotlib", marker = "extra == 'm4-quant-act-1'", specifier = ">=3.11.2" },
     { name = "matplotlib", marker = "extra == 'm4-quant-act-2'", specifier = ">=3.11.2" },
+    { name = "matplotlib", marker = "extra == 'm4-quant-act-3'", specifier = ">=3.11.2" },
     { name = "numpy", specifier = ">=2.5.3" },
     { name = "numpy", marker = "extra == 'm2-ai'", specifier = ">=1.26.0" },
     { name = "numpy", marker = "extra == 'm2-ai-linear-regression'", specifier = ">=1.26.0" },
@@ -3013,6 +3090,7 @@ requires-dist = [
     { name = "numpy", marker = "extra == 'm4-quant'", specifier = ">=2.5.3" },
     { name = "numpy", marker = "extra == 'm4-quant-act-1'", specifier = ">=2.5.3" },
     { name = "numpy", marker = "extra == 'm4-quant-act-2'", specifier = ">=2.5.3" },
+    { name = "numpy", marker = "extra == 'm4-quant-act-3'", specifier = ">=2.5.3" },
     { name = "openpyxl", specifier = ">=3.1.0" },
     { name = "openpyxl", marker = "extra == 'm2-ai'", specifier = ">=3.1.0" },
     { name = "openpyxl", marker = "extra == 'm2-ai-neural-network'", specifier = ">=3.1.0" },
@@ -3022,6 +3100,7 @@ requires-dist = [
     { name = "pandas", marker = "extra == 'm4-quant'", specifier = ">=3.0.6" },
     { name = "pandas", marker = "extra == 'm4-quant-act-1'", specifier = ">=3.0.6" },
     { name = "pandas", marker = "extra == 'm4-quant-act-2'", specifier = ">=3.0.6" },
+    { name = "pandas", marker = "extra == 'm4-quant-act-3'", specifier = ">=3.0.6" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "requests", marker = "extra == 'm2-ai'", specifier = ">=2.31.0" },
     { name = "requests", marker = "extra == 'm2-ai-linear-regression'", specifier = ">=2.31.0" },
@@ -3031,10 +3110,15 @@ requires-dist = [
     { name = "scipy", marker = "extra == 'm4-quant'", specifier = ">=1.18.1" },
     { name = "scipy", marker = "extra == 'm4-quant-act-1'", specifier = ">=1.18.1" },
     { name = "scipy", marker = "extra == 'm4-quant-act-2'", specifier = ">=1.18.1" },
+    { name = "scipy", marker = "extra == 'm4-quant-act-3'", specifier = ">=1.18.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "seaborn", marker = "extra == 'm4-quant'", specifier = ">=0.13.2" },
     { name = "seaborn", marker = "extra == 'm4-quant-act-1'", specifier = ">=0.13.2" },
     { name = "seaborn", marker = "extra == 'm4-quant-act-2'", specifier = ">=0.13.2" },
+    { name = "seaborn", marker = "extra == 'm4-quant-act-3'", specifier = ">=0.13.2" },
+    { name = "simpy", specifier = ">=4.1.1" },
+    { name = "simpy", marker = "extra == 'm4-quant'", specifier = ">=4.1.1" },
+    { name = "simpy", marker = "extra == 'm4-quant-act-3'", specifier = ">=4.1.1" },
     { name = "streamlit", specifier = ">=1.30.0" },
     { name = "streamlit", marker = "extra == 'm2-ai'", specifier = ">=1.30.0" },
     { name = "streamlit", marker = "extra == 'm2-ai-neural-network'", specifier = ">=1.30.0" },
@@ -3042,11 +3126,12 @@ requires-dist = [
     { name = "tabulate", marker = "extra == 'm4-quant'", specifier = ">=0.10.0" },
     { name = "tabulate", marker = "extra == 'm4-quant-act-1'", specifier = ">=0.10.0" },
     { name = "tabulate", marker = "extra == 'm4-quant-act-2'", specifier = ">=0.10.0" },
+    { name = "tabulate", marker = "extra == 'm4-quant-act-3'", specifier = ">=0.10.0" },
     { name = "tensorflow", specifier = ">=2.15.0" },
     { name = "tensorflow", marker = "extra == 'm2-ai'", specifier = ">=2.15.0" },
     { name = "tensorflow", marker = "extra == 'm2-ai-linear-regression'", specifier = ">=2.15.0" },
 ]
-provides-extras = ["m2-ai-linear-regression", "m2-ai-neural-network", "m2-ai", "m4-quant-act-1", "m4-quant-act-2", "m4-quant"]
+provides-extras = ["m2-ai-linear-regression", "m2-ai-neural-network", "m2-ai", "m4-quant-act-1", "m4-quant-act-2", "m4-quant-act-3", "m4-quant"]
 
 [package.metadata.requires-dev]
 m2-ai = [
@@ -3083,6 +3168,7 @@ m4-quant = [
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "scipy", specifier = ">=1.18.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "simpy", specifier = ">=4.1.1" },
     { name = "tabulate", specifier = ">=0.10.0" },
 ]
 m4-quant-act-1 = [
@@ -3108,6 +3194,19 @@ m4-quant-act-2 = [
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "scipy", specifier = ">=1.18.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "tabulate", specifier = ">=0.10.0" },
+]
+m4-quant-act-3 = [
+    { name = "great-tables", specifier = ">=1.0.0" },
+    { name = "ipykernel", specifier = ">=7.4.0" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "jupytext", specifier = ">=1.19.6" },
+    { name = "matplotlib", specifier = ">=3.11.2" },
+    { name = "numpy", specifier = ">=2.5.3" },
+    { name = "pandas", specifier = ">=3.0.6" },
+    { name = "scipy", specifier = ">=1.18.1" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "simpy", specifier = ">=4.1.1" },
     { name = "tabulate", specifier = ">=0.10.0" },
 ]
 
