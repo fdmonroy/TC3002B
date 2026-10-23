@@ -1,8 +1,7 @@
-"""Discrete event simulation engine for M/M/1 and M/M/c queuing systems using SimPy."""
-
-from __future__ import annotations
+"""Discrete event queue simulator in SimPy."""
 
 from dataclasses import dataclass
+import math
 import numpy as np
 import pandas as pd
 import simpy
@@ -10,10 +9,8 @@ import simpy
 from act_3.analytics import compute_mm1_theoretical, compute_mmc_theoretical
 
 
-@dataclass
+@dataclass(frozen=True)
 class CustomerRecord:
-    """Individual customer trajectory measurements across the queuing system."""
-
     customer_id: int
     arrival_time: float
     service_start_time: float
@@ -26,8 +23,6 @@ class CustomerRecord:
 
 @dataclass
 class SimulationResult:
-    """Aggregated empirical metrics and sample trajectories from a SimPy run."""
-
     arrival_rate: float
     service_rate: float
     n_servers: int
@@ -46,30 +41,31 @@ class SimulationResult:
     state_occupancy: dict[int, float]
 
 
-def inverse_transform_exponential(rate: float, rng: np.random.Generator) -> float:
-    """Sample an exponential random variable via inverse transform X = -(1/rate) * ln(1 - U)."""
+def inverse_transform_exponential(
+    rate: float,
+    rng: np.random.Generator,
+) -> float:
     if rate <= 0.0:
-        raise ValueError("Rate parameter must be strictly positive.")
+        raise ValueError("rate must be > 0.")
     u = float(rng.uniform(0.0, 1.0))
-    return -np.log(1.0 - u) / rate
+    return -math.log(1.0 - u) / rate
 
 
 def run_queue_simulation(
     arrival_rate: float,
     service_rate: float,
-    sim_time: float = 60000.0,
+    sim_time: float = 120000.0,
     n_servers: int = 1,
-    warmup_time: float = 0.0,
+    warmup_time: float = 2000.0,
     seed: int = 42,
     max_timeline_points: int = 2000,
 ) -> SimulationResult:
-    """Execute a discrete event simulation of an M/M/c queue in minutes using SimPy."""
     if arrival_rate <= 0.0 or service_rate <= 0.0:
-        raise ValueError("Arrival and service rates must be strictly positive.")
+        raise ValueError("Rates must be > 0.")
     if n_servers < 1:
-        raise ValueError("Number of servers must be at least 1.")
+        raise ValueError("n_servers must be >= 1.")
     if sim_time <= warmup_time:
-        raise ValueError("Total simulation time must exceed warmup_time.")
+        raise ValueError("sim_time must be > warmup_time.")
 
     rng = np.random.default_rng(seed)
     lambda_per_min = arrival_rate / 60.0
@@ -81,71 +77,63 @@ def run_queue_simulation(
     records: list[CustomerRecord] = []
     interarrival_samples: list[float] = []
     service_samples: list[float] = []
-    timeline_events: list[dict[str, float | int]] = []
 
     state = {
         "n_system": 0,
-        "n_queue": 0,
-        "n_busy": 0,
         "last_event_time": 0.0,
         "area_system": 0.0,
         "area_queue": 0.0,
         "area_busy": 0.0,
     }
-    state_time_by_k: dict[int, float] = {}
+    state_time_by_k: dict[int, float] = {k: 0.0 for k in range(16)}
+    timeline_events: list[dict[str, float | int | str]] = [
+        {"time_mins": 0.0, "n_system": 0, "n_queue": 0, "event": "init"}
+    ]
 
     def _accumulate_areas(now: float) -> None:
         prev_t = state["last_event_time"]
-        if now > prev_t and now > warmup_time:
-            start_t = max(prev_t, warmup_time)
-            dt = now - start_t
-            if dt > 0.0:
-                n_sys = int(state["n_system"])
+        if now > prev_t:
+            start_eff = max(prev_t, warmup_time)
+            if now > start_eff:
+                dt = now - start_eff
+                n_sys = state["n_system"]
+                n_q = max(0, n_sys - n_servers)
+                n_busy = min(n_sys, n_servers)
                 state["area_system"] += n_sys * dt
-                state["area_queue"] += int(state["n_queue"]) * dt
-                state["area_busy"] += int(state["n_busy"]) * dt
-                state_time_by_k[n_sys] = state_time_by_k.get(n_sys, 0.0) + dt
+                state["area_queue"] += n_q * dt
+                state["area_busy"] += n_busy * dt
+                k_bucket = min(n_sys, 15)
+                state_time_by_k[k_bucket] = state_time_by_k.get(k_bucket, 0.0) + dt
         state["last_event_time"] = now
 
-    def _record_timeline(now: float) -> None:
+    def _record_transition(delta: int, event_type: str) -> None:
+        now = float(env.now)
+        _accumulate_areas(now)
+        state["n_system"] += delta
         if len(timeline_events) < max_timeline_points:
+            n_sys = state["n_system"]
             timeline_events.append(
                 {
-                    "time_mins": float(now),
-                    "n_system": int(state["n_system"]),
-                    "n_queue": int(state["n_queue"]),
-                    "n_busy": int(state["n_busy"]),
+                    "time_mins": now,
+                    "n_system": n_sys,
+                    "n_queue": max(0, n_sys - n_servers),
+                    "event": event_type,
                 }
             )
 
-    _record_timeline(0.0)
-
     def _customer_process(customer_id: int, arrival_t: float) -> simpy.events.Event:
-        q_on_arrival = int(state["n_queue"])
-        _accumulate_areas(env.now)
-        state["n_system"] += 1
-        state["n_queue"] += 1
-        _record_timeline(env.now)
+        q_on_arrival = max(0, state["n_system"] - n_servers)
+        _record_transition(+1, "arrival")
 
         with server.request() as req:
             yield req
             service_start_t = float(env.now)
             wait_t = service_start_t - arrival_t
-
-            _accumulate_areas(service_start_t)
-            state["n_queue"] -= 1
-            state["n_busy"] += 1
-            _record_timeline(service_start_t)
-
             service_dur = inverse_transform_exponential(mu_per_min, rng)
             service_samples.append(service_dur)
             yield env.timeout(service_dur)
-
             departure_t = float(env.now)
-            _accumulate_areas(departure_t)
-            state["n_system"] -= 1
-            state["n_busy"] -= 1
-            _record_timeline(departure_t)
+            _record_transition(-1, "departure")
 
             if departure_t >= warmup_time:
                 records.append(
@@ -203,8 +191,6 @@ def run_queue_simulation(
         w_sys_emp = 0.0
         w_q_emp = 0.0
 
-    timeline_df = pd.DataFrame(timeline_events)
-
     return SimulationResult(
         arrival_rate=float(arrival_rate),
         service_rate=float(service_rate),
@@ -220,13 +206,12 @@ def run_queue_simulation(
         interarrival_samples_mins=np.array(interarrival_samples, dtype=np.float64),
         service_samples_mins=np.array(service_samples, dtype=np.float64),
         records_df=records_df,
-        timeline_df=timeline_df,
+        timeline_df=pd.DataFrame(timeline_events),
         state_occupancy=occupancy_probs,
     )
 
 
 def compare_empirical_vs_theoretical(result: SimulationResult) -> pd.DataFrame:
-    """Create comparison table of theoretical M/M/c metrics vs empirical SimPy values."""
     theo = compute_mmc_theoretical(
         result.arrival_rate,
         result.service_rate,
@@ -264,7 +249,6 @@ def run_rho_sweep_simulation(
     warmup_time: float = 2000.0,
     seed: int = 42,
 ) -> pd.DataFrame:
-    """Run both analytical and SimPy M/M/1 evaluations across a grid of traffic intensities."""
     rows = []
     for idx, rho in enumerate(rho_values):
         lam = rho * service_rate
