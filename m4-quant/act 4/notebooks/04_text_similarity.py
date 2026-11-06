@@ -127,7 +127,9 @@ corpus_table = pd.DataFrame(
 )
 
 # %%
-print(corpora["shrek"][:400], "...")
+import textwrap
+
+print(textwrap.fill(corpora["shrek"][:400] + " ...", width=100))
 
 # %% [markdown]
 # ## 3. Texto sintético
