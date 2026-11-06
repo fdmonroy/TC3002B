@@ -260,9 +260,11 @@ params_table = pd.DataFrame(
 #
 # La métrica compara la dirección de los vectores, no su longitud. Con vectores TF-IDF no negativos da valores entre 0 y 1. La diagonal de la matriz vale 1.0, la matriz es simétrica y el resto mide el traslape de vocabulario y n-gramas entre cada par.
 #
-# Los cinco textos se vectorizan con un solo ajuste del `TfidfVectorizer`, así todas las comparaciones usan el mismo vocabulario.
+# Los cinco textos se vectorizan con un solo ajuste del `TfidfVectorizer`, así todas las comparaciones usan el mismo vocabulario. La matriz resultante es dispersa, como en la demo de clase, y las celdas de abajo reportan su forma y su densidad.
 
 # %%
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 from act_4.similarity import (
     DOCUMENT_LABELS,
     LABEL_SHREK,
@@ -276,9 +278,16 @@ from act_4.similarity import (
 documents = build_document_set(root_dir)
 matrix = compute_similarity_matrix(documents)
 
+docs_in_order = [documents[label] for label in DOCUMENT_LABELS]
+tfidf = TfidfVectorizer(**VECTORIZER_PARAMS).fit_transform(docs_in_order)
+total_entries = tfidf.shape[0] * tfidf.shape[1]
+
 print("Orden de los documentos:", list(DOCUMENT_LABELS))
 print("Diagonal igual a 1.0:", bool(np.allclose(np.diag(matrix.values), 1.0)))
 print("Matriz simétrica:", bool(np.allclose(matrix.values, matrix.values.T)))
+print("Forma de la matriz TF-IDF:", tfidf.shape)
+print("Entradas distintas de cero:", tfidf.nnz, "de", total_entries)
+print("Densidad: {:.1%}".format(tfidf.nnz / total_entries))
 
 # %%
 matrix_display = matrix.round(4).rename_axis("Documento").reset_index()
@@ -383,9 +392,9 @@ plot_ranked_bar(ranking, assets_dir / "similitud_ordenada.png")
 #
 # ### 7.1 ¿Cómo varía la medida de similitud en función del texto que se compara?
 #
-# Varía bastante y de forma predecible. La similitud crece con el vocabulario compartido y el ranking lo demuestra. El texto sintético va primero porque todas sus palabras vienen del original. Le sigue Shrek 2, que comparte personajes y expresiones. Toy Story solo comparte el tipo de humor. Alicia queda al final porque con Shrek solo comparte el inglés más común, justo el que las palabras vacías eliminan.
+# Varía bastante y de forma predecible. La similitud crece con el vocabulario compartido y el ranking lo demuestra. El texto sintético va primero porque todas sus palabras vienen del original. Le sigue Shrek 2, que comparte personajes y expresiones. Toy Story solo comparte el tipo de humor. Alicia queda al final porque con Shrek solo comparte el inglés más común, justo el que las palabras vacías eliminan. Y como en la demo de clase, donde dos reseñas sin nada que ver quedaban encima solo por compartir la expresión grab and go, aquí hasta los pares menos parecidos quedan por encima de cero: compartir unas cuantas palabras ya mueve el número.
 #
-# Lo sorprendente fue la escala. En clase vimos una referencia: 1.0 para una copia, cerca de 0.89 para una paráfrasis y 0 para textos sin nada en común. Aquí el par más parecido apenas llega a 0.2144. La culpa es de la dimensionalidad: con n-gramas de 1 a 3, un n-grama compartido ya es raro y los cosenos se aplastan hacia el cero. Con solo unigramas el orden queda igual y los valores suben mucho, como se ve en la sección 6. La lección que me llevo es leer un ranking de forma relativa, comparando sus valores entre sí y no contra un umbral absoluto.
+# Lo sorprendente fue la escala. En clase vimos una referencia: 1.0 para una copia, cerca de 0.89 para una paráfrasis y 0 para textos sin nada en común. Aquí el par más parecido apenas llega a 0.2144. La culpa es de la dimensionalidad: el vocabulario se dispara a casi 49 mil columnas, como se ve en la sección 5, un n-grama compartido ya es raro y los cosenos se aplastan hacia el cero. Con solo unigramas el orden queda igual y los valores suben mucho, como se ve en la sección 6. La lección que me llevo es leer un ranking de forma relativa, comparando sus valores entre sí y no contra un umbral absoluto.
 
 # %% [markdown]
 # ### 7.2 ¿Una similitud alta garantiza que dos textos son del mismo autor?
@@ -397,6 +406,6 @@ plot_ranked_bar(ranking, assets_dir / "similitud_ordenada.png")
 # %% [markdown]
 # ### 7.3 Decisiones y limitaciones
 #
-# Elegimos TF-IDF porque es interpretable y porque la pregunta de la actividad es una pregunta de frecuencias. Cada peso del vector es un término identificable y cada resultado se explica por los términos compartidos. Una métrica semántica costaría más y explicaría menos aquí. Es el KISS que se vio en clase.
+# Elegimos TF-IDF porque es interpretable y porque la pregunta de la actividad es una pregunta de frecuencias. Cada peso del vector es un término identificable y cada resultado se explica por los términos compartidos. Una métrica semántica costaría más y explicaría menos aquí. En clase también salió la idea de mezclar varias métricas de similitud, pero aquí una bastó. Es el KISS que se vio en clase.
 #
 # Tampoco el camino fue limpio. La sección 2 documenta las tres fuentes que hubo que sustituir, el texto sintético repite palabras y oraciones con ejemplos en la sección 3, y las palabras vacías son una lista fija, así que parte del estilo de los guiones se queda fuera de la métrica. Nada de esto cambia las conclusiones de arriba.
