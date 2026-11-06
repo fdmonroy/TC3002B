@@ -7,7 +7,7 @@ Este proyecto compara la similitud entre guiones de peliculas y un texto literar
 * `notebooks/`: Cuadernos interactivos Jupyter en formato percent script (.py) y notebook (.ipynb) sincronizados mediante jupytext.
 * `src/act_4/`: Modulos de codigo Python reutilizables (descarga y limpieza de corpus de guiones y texto literario, vectorizacion TF-IDF, calculo de similitud coseno y generacion de texto con cadenas de Markov).
 * `scripts/`: Filtros Lua para Pandoc y plantillas TeX para supresion de celdas de codigo y tipografia academica.
-* `data/raw/`: Corpus originales descargados (guiones de Shrek, Shrek 2 y Toy Story, y Alicia en el pais de las maravillas) junto con sus versiones limpias.
+* `data/raw/`: Textos finales ya limpios (Shrek, Shrek 2, Toy Story y Alicia en el pais de las maravillas); el texto sintetico generado vive en `data/synthetic/`.
 * `assets/`: Graficas de matrices de similitud y longitudes de corpus.
 * `export/`: Entregables compilados en formatos Word (.docx) y PDF (.pdf).
 * `pyproject.toml`: Especificacion del proyecto y dependencias manejadas con uv.

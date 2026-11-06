@@ -31,10 +31,12 @@ RANKED_BAR_FIG = Path("similitud_ordenada.png")
 def _activity_root() -> Path:
     """Return the activity root, tolerating invocation one directory below it.
 
-    The activity root is the directory that contains ``data/`` and
-    ``assets/``. All runner paths (corpora, synthetic corpus, figures)
-    are derived from this single root so a run from a subdirectory reads
-    and writes the same files as a run from the root itself.
+    The root is located by probing for the ``data/raw/`` corpus directory:
+    it is the current working directory if ``data/raw/`` exists there, or
+    its parent directory if ``data/raw/`` exists one level up. All runner
+    paths (corpora, synthetic corpus, figures) are derived from this
+    single root so a run from a subdirectory reads and writes the same
+    files as a run from the root itself.
     """
     cwd = Path(".")
     if (cwd / RAW_SUBDIR).is_dir():
