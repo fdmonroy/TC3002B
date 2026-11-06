@@ -17,6 +17,10 @@ import seaborn as sns
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+#: Directory holding this script: the extracted-zip layout, where the
+#: shipped corpus files sit as siblings of the script.
+SCRIPT_DIR = Path(__file__).resolve().parent
+
 #: Activity root, resolved from this script's location in ``export/`` via
 #: ``Path(__file__).parents[1]`` (the directory that holds ``data/``).
 ACTIVITY_DIR = Path(__file__).resolve().parents[1]
@@ -76,20 +80,39 @@ def _apply_style() -> None:
     plt.rcParams["axes.linewidth"] = _SPINE_LINEWIDTH
 
 
+def _locate_corpus_file(label: str) -> Path:
+    """Return the path of a corpus file, trying each known layout in order.
+
+    Layout 1 (extracted zip): the shipped corpus files sit as siblings of
+    this script in the same directory. Layout 2 (activity repo): the
+    cleaned corpora live under ``data/raw`` and the synthetic corpus
+    under ``data/synthetic`` of the activity root.
+    """
+    filename = SYNTHETIC_FILE if label == "Shrek Sintético" else CORPUS_FILES[label]
+    repo_file = (
+        SYNTHETIC_DIR / SYNTHETIC_FILE
+        if label == "Shrek Sintético"
+        else RAW_DIR / CORPUS_FILES[label]
+    )
+    for candidate in (SCRIPT_DIR / filename, repo_file):
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(
+        f"No se encontró {filename!r} junto al script {SCRIPT_DIR} "
+        f"ni en {repo_file.parent}."
+    )
+
+
 def build_document_set() -> dict[str, str]:
     """Return the five analysis documents keyed by display label.
 
-    Loads the four cleaned raw corpora from ``data/raw`` and the
-    Markov-generated synthetic Shrek text from ``data/synthetic``,
-    preserving the canonical order of ``DOCUMENT_LABELS``.
+    Loads the four cleaned raw corpora and the Markov-generated synthetic
+    Shrek text from the shipped corpus files, preserving the canonical
+    order of ``DOCUMENT_LABELS``.
     """
     documents: dict[str, str] = {}
     for label in DOCUMENT_LABELS:
-        if label == "Shrek Sintético":
-            path = SYNTHETIC_DIR / SYNTHETIC_FILE
-        else:
-            path = RAW_DIR / CORPUS_FILES[label]
-        documents[label] = path.read_text(encoding="utf-8")
+        documents[label] = _locate_corpus_file(label).read_text(encoding="utf-8")
     return documents
 
 
