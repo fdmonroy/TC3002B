@@ -144,6 +144,8 @@ print(corpora["shrek"][:400], "...")
 # La siguiente celda reconstruye el modelo, regenera el texto sintético en memoria y lo compara con el archivo en disco (`data/synthetic/shrek_sintetico.txt`) para demostrar la reproducibilidad.
 
 # %%
+from collections import Counter
+
 from act_4.generator import (
     SYNTHETIC_TARGET_FRACTION,
     build_model,
@@ -167,6 +169,11 @@ original_sentences = {
 }
 verbatim_duplicates = sum(1 for s in synthetic_sentences if s in original_sentences)
 repeated_within = len(synthetic_sentences) - len(set(synthetic_sentences))
+prefix_counts = Counter(" ".join(s.split()[:4]) for s in synthetic_sentences)
+shared_prefixes = sum(c - 1 for c in prefix_counts.values() if c > 1)
+loop_example = next(
+    (s for s in synthetic_sentences if "that you that you" in s), None
+)
 
 generation_table = pd.DataFrame(
     [
@@ -178,6 +185,7 @@ generation_table = pd.DataFrame(
         {"Indicador": "Tamaño de estado usado", "Valor": f"{state_size_used} (respaldo a 1 no activado)"},
         {"Indicador": "Oraciones duplicadas literales del original", "Valor": f"{verbatim_duplicates}"},
         {"Indicador": "Oraciones repetidas dentro del texto sintético", "Valor": f"{repeated_within}"},
+        {"Indicador": "Líneas que comparten sus primeras 4 palabras con otra línea", "Valor": f"{shared_prefixes}"},
         {"Indicador": "Reproducible contra el archivo en disco", "Valor": f"{reproducible}"},
     ]
 )
@@ -191,6 +199,7 @@ generation_table = pd.DataFrame(
 # %%
 for sentence in synthetic_sentences[:3]:
     print("-", sentence)
+print("Ejemplo de bucle de repetición:", loop_example)
 
 # %% [markdown]
 # El texto sintético imita el vocabulario y la cadencia del original con oraciones en su mayoría gramaticales o casi gramaticales, pero sus 497 líneas son todas nuevas: ninguna es copia literal de una oración del guion original (0 duplicados literales). Sus patologías cualitativas se discuten en la sección 7.
@@ -203,9 +212,9 @@ for sentence in synthetic_sentences[:3]:
 # **Ponderación TF-IDF.** Cada conteo se reescala con el producto $TF \times IDF$, de modo que los términos frecuentes en un documento pero raros en el corpus reciben mayor peso. Con los parámetros usados:
 #
 # * **TF sublineal** (`sublinear_tf=True`): la frecuencia bruta se sustituye por
-# $$tf'(t,d) = 1 + \log_{10}\, tf(t,d)$$
+# $$tf'(t,d) = 1 + \ln tf(t,d)$$
 # que amortigua la contribución de un término muy repetido dentro de un mismo documento.
-# * **IDF suavizado** (el esquema de scikit learn con `smooth_idf=True`):
+# * **IDF suavizado** (el esquema de scikit-learn con `smooth_idf=True`):
 # $$idf(t) = \ln\!\left(\frac{1 + N}{1 + df(t)}\right) + 1$$
 # donde $N$ es el número de documentos y $df(t)$ el número de documentos donde aparece el término $t$.
 # * El peso final es $w_{t,d} = tf'(t,d) \cdot idf(t)$ y cada vector se normaliza con norma L2 (`norm="l2"`), de modo que $\|d\|_2 = 1$ y la similitud coseno se reduce al producto punto.
@@ -221,7 +230,7 @@ PARAM_EFFECT = {
     "ngram_range": "El vocabulario incluye uni, bi y trigramas",
     "max_df": "Descartar términos presentes en más del 90% de los documentos",
     "min_df": "Conservar todo término que aparezca al menos una vez",
-    "sublinear_tf": "Frecuencia sublineal 1 + log(tf) que amortigua términos dominantes",
+    "sublinear_tf": "Frecuencia sublineal 1 + ln(tf) que amortigua términos dominantes",
     "norm": "Normalizar cada vector con norma L2",
 }
 
@@ -377,9 +386,9 @@ plot_ranked_bar(ranking, assets_dir / "similitud_ordenada.png")
 #
 # Shrek 2 ocupa el segundo lugar con 0.0827. Es una secuela de la misma franquicia, con los mismos personajes, sus nombres propios y sus expresiones recurrentes, así que comparte con el original mucho vocabulario específico que no aparece en ningún otro texto del corpus. Toy Story baja a 0.0474: comparte género (animación, comedia, público infantil) y registro de diálogo cinematográfico, incluidas palabras propias de comedia rápida como yes, hey, come on, pero casi no comparte vocabulario distintivo; además, al venir de un guion de IMSDb conserva algunas acotaciones de escena. Alicia queda última con 0.0393: es narrativa literaria británica del siglo 19, con un registro sin diálogo moderno y un vocabulario que solo se cruza con el de Shrek en el inglés más común, precisamente el que la lista de palabras vacías elimina.
 #
-# La magnitud, en cambio, depende fuertemente de la configuración de vectorización. En clase se revisó una escala de referencia calibrada: 1.0 para una copia idéntica, cerca de 0.89 para una paráfrasis, cerca de 0.55 para un traslape parcial y 0 para dos textos sin términos comunes. Los valores medidos aquí quedan muy por debajo de esos valores de referencia: el par más parecido de toda la actividad alcanza apenas 0.2144. La razón es la dimensionalidad. Con n-gramas de 1 a 3 y cinco documentos, el vocabulario se multiplica por los bigramas y trigramas que solo aparecen en un documento; un n-grama compartido por dos textos distintos se vuelve un evento raro y las normas L2 se reparten entre muchas más dimensiones, así que los cosenos se comprimen hacia 0. La verificación de robustez con solo unigramas lo confirma: las similitudes contra Shrek suben a 0.5217, 0.3029, 0.1912 y 0.1763, es decir, entre 2 y 4 veces más, y la escala calibrada de la clase corresponde a un escenario de dimensionalidad baja como ese. El orden del ranking es idéntico en ambas configuraciones, pero las magnitudes no son comparables entre configuraciones distintas.
+# La magnitud, en cambio, depende fuertemente de la configuración de vectorización. En clase se revisó una escala de referencia calibrada: 1.0 para una copia idéntica, cerca de 0.89 para una paráfrasis, cerca de 0.55 para un traslape parcial y 0 para dos textos sin términos comunes. Los valores medidos aquí quedan muy por debajo de esos valores de referencia: el par más parecido de toda la actividad alcanza apenas 0.2144. La razón es la dimensionalidad. Con n-gramas de 1 a 3 y cinco documentos, el vocabulario se multiplica por los bigramas y trigramas que solo aparecen en un documento; un n-grama compartido por dos textos distintos se vuelve un evento raro y las normas L2 se reparten entre muchas más dimensiones, así que los cosenos se comprimen hacia 0. La verificación de robustez con solo unigramas lo confirma: las similitudes contra Shrek suben a 0.5217, 0.3029, 0.1912 y 0.1763, es decir, entre 2.4 y 4.5 veces más, y la escala calibrada de la clase corresponde a un escenario de dimensionalidad baja como ese. El orden del ranking es idéntico en ambas configuraciones, pero las magnitudes no son comparables entre configuraciones distintas.
 #
-# La consecuencia práctica es que un umbral absoluto (por ejemplo, "similitud mayor a 0.5 indica paráfrasis") solo tiene sentido calibrado dentro de una misma configuración. El fenómeno de compresión que se discutió en clase, la tendencia de las magnitudes a desvanecerse hacia cero en espacios de alta dimensionalidad, es visible aquí: bajo la configuración enviada, todos los pares fuera de la diagonal, salvo los del texto sintético, quedan por debajo de 0.05. Por eso los parámetros incluyen `sublinear_tf=True` y `max_df=0.9`, que amortiguan las dos causas principales: términos con frecuencias muy desbalanceadas dentro de un documento y términos omnipresentes que engordan el vector sin distinguir nada. La lectura correcta de estos resultados es comparar entre sí los valores de un mismo ranking, con cortes calibrados a partir de las propias mediciones, y no aplicar la escala de referencia de forma absoluta.
+# La consecuencia práctica es que un umbral absoluto (por ejemplo, "similitud mayor a 0.5 indica paráfrasis") solo tiene sentido calibrado dentro de una misma configuración. El fenómeno de compresión que se discutió en clase, la tendencia de las magnitudes a desvanecerse hacia cero en espacios de alta dimensionalidad, es visible aquí: bajo la configuración enviada, todos los pares que no involucran al corpus base Shrek quedan entre 0.018 y 0.047, y contra Shrek solo el texto sintético (0.2144) y Shrek 2 (0.0827) superan 0.05. Por eso los parámetros incluyen `sublinear_tf=True` y `max_df=0.9`, que amortiguan las dos causas principales: términos con frecuencias muy desbalanceadas dentro de un documento y términos omnipresentes que engordan el vector sin distinguir nada. La lectura correcta de estos resultados es comparar entre sí los valores de un mismo ranking, con cortes calibrados a partir de las propias mediciones, y no aplicar la escala de referencia de forma absoluta.
 
 # %% [markdown]
 # ### 7.2 ¿Una similitud alta garantiza que dos textos son del mismo autor?
@@ -397,7 +406,7 @@ plot_ranked_bar(ranking, assets_dir / "similitud_ordenada.png")
 # %% [markdown]
 # ### 7.3 Limitaciones y decisiones
 #
-# **La compresión de magnitudes es la principal limitación de la métrica tal como está configurada y se discutió en el punto 7.1.** En espacios de alta dimensionalidad los valores de similitud coseno se desvanecen hacia cero, y aquí el efecto es fuerte: bajo n-gramas de 1 a 3, todos los pares no sintéticos quedan entre 0.018 y 0.047. Además de las mitigaciones de parámetros ya citadas (`sublinear_tf=True` para amortiguar frecuencias dominantes y `max_df=0.9` para eliminar términos omnipresentes), la decisión recomendada es leer los rankings en términos relativos: en un ranking de candidatos, el orden y las distancias entre posiciones aportan más información que el valor absoluto contra un umbral fijo. La verificación con solo unigramas complementa esa lectura al mostrar que el orden es un resultado estable mientras que las magnitudes son un artefacto de la configuración.
+# **La compresión de magnitudes es la principal limitación de la métrica tal como está configurada y se discutió en el punto 7.1.** En espacios de alta dimensionalidad los valores de similitud coseno se desvanecen hacia cero, y aquí el efecto es fuerte: bajo n-gramas de 1 a 3, todos los pares que no involucran al corpus Shrek quedan entre 0.018 y 0.047. Además de las mitigaciones de parámetros ya citadas (`sublinear_tf=True` para amortiguar frecuencias dominantes y `max_df=0.9` para eliminar términos omnipresentes), la decisión recomendada es leer los rankings en términos relativos: en un ranking de candidatos, el orden y las distancias entre posiciones aportan más información que el valor absoluto contra un umbral fijo. La verificación con solo unigramas complementa esa lectura al mostrar que el orden es un resultado estable mientras que las magnitudes son un artefacto de la configuración.
 #
 # **Por qué TF-IDF y no Word2Vec o embeddings neuronales.** TF-IDF es interpretable: cada peso del vector corresponde a un término identificable y cada resultado se puede explicar diciendo qué términos comparten dos textos. Corre en CPU con cinco documentos en fracciones de segundo. La pregunta de la actividad (qué tan parecidos son dos textos por su vocabulario y sus n-gramas) es una pregunta de frecuencias, y para responderla una métrica de frecuencias es suficiente y directa: un embedding semántico añade costo, capacidad de error y opacidad sin cambiar la pregunta, y con 9110 palabras de corpus de entrenamiento disponible en el proyecto sería además inviable entrenar un modelo de calidad. Aplicar aquí el principio de KISS validado en clase: la solución más sencilla que responde la pregunta es la correcta.
 #
@@ -409,6 +418,6 @@ plot_ranked_bar(ranking, assets_dir / "similitud_ordenada.png")
 #
 # **Reproducibilidad de la generación.** `markovify` 0.9.4 no acepta un argumento de generador aleatorio en `make_sentence` (su cadena obtiene los números del módulo global `random`), así que la reproducibilidad se logró resembrando `random.seed(2026)` al inicio tanto de la construcción del modelo como de la generación. La sección 3 lo demuestra: una regeneración completa en memoria coincide por bytes con el archivo en disco. La regla de respaldo definida, reconstruir con tamaño de estado 1 si la sonda de 500 oraciones devolviera menos de 100 utilizables, nunca se activó: el corpus sostiene el estado 2 sin dificultad (500 de 500 oraciones en la sonda).
 #
-# **Patologías del texto sintético, documentadas con honestidad.** El texto generado no es impecable y conviene decirlo. Presenta bucles raros de repetición de palabras propios de las cadenas de orden 2 (por ejemplo, una oración con el ciclo "I'll tell you that you that you can come visit me in the rain"), deriva interrogativa (oraciones que empiezan como enunciado y terminan en signo de pregunta, porque la cadena une el inicio de una oración del original con el final de otra) y repetición interna de oraciones completas (80 líneas duplicadas de 497). Ninguno de estos defectos invalida la actividad, pero muestran los límites reales de un modelo generativo tan simple y explican por qué el texto sintético imita el léxico del original pero no su coherencia narrativa.
+# **Patologías del texto sintético, documentadas con honestidad.** El texto generado no es impecable y conviene decirlo. Presenta bucles raros de repetición de palabras propios de las cadenas de orden 2 (en la sección 3 se imprime el ejemplo "I tell you that you that you can find any stairs.", donde la cadena entra en el ciclo "that you / you that"), deriva interrogativa (oraciones que empiezan como enunciado y terminan en signo de pregunta, porque la cadena une el inicio de una oración del original con el final de otra) y repetición interna de oraciones completas (80 líneas duplicadas de 497, 192 de ellas compartiendo sus primeras cuatro palabras con otra línea, medidos en la tabla de la sección 3). Ninguno de estos defectos invalida la actividad, pero muestran los límites reales de un modelo generativo tan simple y explican por qué el texto sintético imita el léxico del original pero no su coherencia narrativa.
 #
 # **Otras limitaciones menores.** La lista de palabras vacías del inglés es fija y elimina términos que en un guion de comedia sí cargan estilo (well, hey), de modo que parte del material del estilo de los guiones queda fuera de la métrica, y el conteo de oraciones del corpus original, usado en la sección 3 para la comparación de duplicados literales, depende de una separación por signos de puntuación que no es perfecta. La métrica también es insensible a la longitud: la normalización L2 hace que Alicia (26524 palabras) y Shrek (9110 palabras) sean comparables, a costa de ignorar la información de tamaño.
