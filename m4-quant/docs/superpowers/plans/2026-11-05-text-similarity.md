@@ -282,5 +282,3 @@ Commit message: `feat(quant): export activity 4.5 docx, standalone script, and d
 Per the author's workflow these are not implemented; offered for consideration only:
 - P0: `compute_similarity_matrix` invariants — diagonal 1.0, symmetry, range [0, 1] — one assertion block.
 - P0: `generate_synthetic` respects `target_words` within a tolerance and always returns non-empty text.
-- P1: `clean_transcript` drops every HTML tag and wiki navigation class on a fixture of the real page.
-- P2: full pipeline reproduction — fixed seed produces byte-identical similarity matrix across two runs.
